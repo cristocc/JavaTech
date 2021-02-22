@@ -1,4 +1,4 @@
-package com.tree;
+package tree;
 
 /**
  * Created by crist on 2020/11/23

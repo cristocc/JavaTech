@@ -1,4 +1,4 @@
-package com.data.structure.reverseLink;
+package structure.reverseLink;
 
 /**
  * Created by crist on 2021/1/27

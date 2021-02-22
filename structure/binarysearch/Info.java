@@ -1,4 +1,4 @@
-package com.data.structure.binarysearch;
+package structure.binarysearch;
 
 import java.util.HashMap;
 import java.util.Map;

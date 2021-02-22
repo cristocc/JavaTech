@@ -1,4 +1,4 @@
-package com.data.structure.fastslowpointer;
+package structure.fastslowpointer;
 
 
 /**

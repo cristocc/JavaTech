@@ -1,4 +1,4 @@
-package com.data.structure.slidewindow;
+package structure.slidewindow;
 
 import java.util.HashMap;
 import java.util.Map;
