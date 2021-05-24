@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <context:component-scan base-package="com.spring.study"/>
+
+<!--    <bean id="user" class="com.demo.model.User" init-method="init" destroy-method="destroy" autowire="byType">
+        <property name="name" value="张三"/>
+        <property name="age" value="18"/>
+    </bean>-->
+
+
+    <bean id="dog" class="com.spring.study.model.Dog" >
+        <property name="name" value="cc"/>
+    </bean>
+
+    <bean id="cat" class="com.spring.study.model.Cat"  autowire="byName">
+        <property name="name" value="xr"/>
+    </bean>
+
+<!--    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename">
+            <value>message</value>
+        </property>
+    </bean>-->
+
+   <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+        <property name="propertyEditorRegistrars">
+            <list>
+                <bean class="com.spring.study.service.CustomDateEditorRegistrar" />
+            </list>
+        </property>
+    </bean>
+
+
+</beans>

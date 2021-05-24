@@ -2,6 +2,6 @@ https://blog.csdn.net/qq_44550513/article/details/106615420
 
 git add .
 git commit -m "注释语句"
-git push -u origin master -f
+git push -u origin main -f
 
 https://blog.csdn.net/sunxiaoju/article/details/86495234 //忽略文件
