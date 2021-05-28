@@ -1,0 +1,5 @@
+Java的wait()、notify()学习三部曲之一：JVM源码分析
+https://blog.csdn.net/boling_cavalry/article/details/77793224
+
+
+bash configure --enable-debug --with-jvm-variants=server  --with-boot-jdk=/home/crist/bootjdk/jdk-11.0.2

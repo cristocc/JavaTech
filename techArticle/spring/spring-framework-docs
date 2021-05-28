@@ -21,3 +21,12 @@ public class ClientService {
 --Instantiation with a Static Factory Method
 
 https://zhuanlan.zhihu.com/p/368769721
+
+逐行解读Spring（四） - 万字长文讲透bean生命周期（上）
+https://juejin.cn/post/6859672060789489672#heading-9
+
+SpringMVC 启动流程及相关源码分析
+https://www.jianshu.com/p/dc64d02e49ac
+
+Spring：源码解读Spring IOC原理
+https://www.cnblogs.com/ITtangtang/p/3978349.html

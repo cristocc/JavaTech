@@ -170,3 +170,7 @@ public   class  CarFactoryBean  implements  FactoryBean<Car>  {
 3 Others：
 
    3.1 Spring中共有两种bean，一种为普通bean，另一种则为工厂bean。
+
+
+spring中BeanFactory和FactoryBean的区别
+   https://blog.csdn.net/qiesheng/article/details/72875315

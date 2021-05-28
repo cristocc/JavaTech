@@ -24,15 +24,18 @@ public class PrintAB {
     private static void print(String data){
         synchronized (monitor){
             try {
-                while (times<10){
+                while (times<5){
                     monitor.notifyAll();
                     System.out.println(data);
                     times++;
+                    System.out.println(data +"before wait");
                     monitor.wait();
+                    System.out.println(data +"after wait");
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
-}
+
+    }
