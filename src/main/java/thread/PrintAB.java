@@ -17,7 +17,6 @@ public class PrintAB {
             print("b");
         };
         new Thread(a).start();
-        Thread.sleep(1);
         new Thread(b).start();
     }
 
@@ -28,9 +27,9 @@ public class PrintAB {
                     monitor.notifyAll();
                     System.out.println(data);
                     times++;
-                    System.out.println(data +"before wait");
+                    System.out.println(data +":before wait");
                     monitor.wait();
-                    System.out.println(data +"after wait");
+                    System.out.println(data +":after wait");
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

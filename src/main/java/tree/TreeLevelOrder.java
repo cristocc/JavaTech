@@ -45,13 +45,13 @@ public class TreeLevelOrder {
     }
 
 
-    public List<List<Integer>> levelOrderDfs(TreeNode root) {
+    public static List<List<Integer>> levelOrderDfs(TreeNode root) {
         List<List<Integer>> res = new ArrayList<>();
         levelHelper(res, root, 0);
         return res;
     }
 
-    public void levelHelper(List<List<Integer>> list, TreeNode root, int level) {
+    public static void levelHelper(List<List<Integer>> list, TreeNode root, int level) {
         //边界条件判断
         if (root == null)
             return;
@@ -67,4 +67,12 @@ public class TreeLevelOrder {
         levelHelper(list, root.right, level + 1);
     }
 
+    public static void main(String[] args) {
+        TreeNode root = new TreeNode(1);
+        TreeNode child1 = new TreeNode(2);
+        TreeNode child2 = new TreeNode(3);
+        root.left = child1;
+        root.right = child2;
+        levelOrderDfs(root);
+    }
 }
