@@ -6,3 +6,15 @@ http://www.iocoder.cn/MyBatis/good-collection/?title
 
 mybatis文档
 https://mybatis.org/mybatis-3/zh/java-api.html
+
+org.apache.ibatis.type
+深入 TypeHandler
+在使用 PreparedStatement 执行 SQL 语句之前，都是需要手动调用 setInt()、setString() 等 set 方法绑定参数，
+这不仅仅是告诉 JDBC 一个 SQL 模板中哪个占位符需要使用哪个实参，还会将数据从 Java 类型转换成 JDBC 类型。当从 ResultSet 中获取数据的时候，则是一个逆过程，数据会从 JDBC 类型转换为 Java 类型。
+
+
+
+MyBatis 初始化的第一个步骤就是加载和解析 mybatis-config.xml 这个全局配置文件，
+入口是 XMLConfigBuilder 这个 Builder 对象，它由 SqlSessionFactoryBuilder.build() 方法创建。
+XMLConfigBuilder 会解析 mybatis-config.xml 配置文件得到对应的 Configuration 全局配置对象，
+然后 SqlSessionFactoryBuilder 会根据得到的 Configuration 全局配置对象创建一个 DefaultSqlSessionFactory 对象返回给上层使用。

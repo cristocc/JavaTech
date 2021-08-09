@@ -1,2 +1,4 @@
 https://docs.spring.io/spring-boot/docs/2.4.5/reference/htmlsingle/
 
+Spring Boot 特性四：Actuator 监控
+Spring Boot 自带了 Actuator 监控功能，主要用于提供对应用程序监控，以及控制的能力，比如监控应用程序的运行状况，或者内存、线程池、Http 请求统计等，同时还提供了关闭应用程序等功能。

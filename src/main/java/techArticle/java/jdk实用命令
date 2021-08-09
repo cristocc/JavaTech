@@ -1,0 +1,36 @@
+1. jps（虚拟机进程状况工具）
+jps（JVM Process Status tool，虚拟机进程状况工具）它的功能和 Linux 中的 ps 命令比较类似，用于列出正在运行的 JVM 的 LVMID（Local Virtual Machine IDentifier，本地虚拟机唯一 ID），
+以及 JVM 的执行主类、JVM 启动参数等信息。语法如下：
+jps [options] [hostid]
+常用的 options 选项：
+-l：用于输出运行主类的全名，如果是 jar 包，则输出 jar 包的路径；
+-q：用于输出 LVMID（Local Virtual Machine Identifier，虚拟机唯一 ID）；
+-m：用于输出虚拟机启动时传递给主类 main() 方法的参数；
+-v：用于输出启动时的 JVM 参数。
+
+2. jstat（虚拟机统计信息监视工具）
+jstat（JVM Statistics Monitoring Tool，虚拟机统计信息监视工具）用于监控虚拟机的运行状态信息。
+S0C	年轻代中第一个存活区的大小
+S1C	年轻代中第二个存活区的大小
+S0U	年轻代中第一个存活区已使用的空间（字节）
+S1U	年轻代中第二个存活区已使用的空间（字节）
+EC	Eden 区大小
+EU	年轻代中 Eden 区已使用的空间（字节）
+OC	老年代大小
+OU	老年代已使用的空间（字节）
+YGC	从应用程序启动到采样时 young gc 的次数
+YGCT	从应用程序启动到采样时 young gc 的所用的时间（s）
+FGC	从应用程序启动到采样时 full gc 的次数
+FGCT	从应用程序启动到采样时 full gc 的所用的时间
+GCT	从应用程序启动到采样时整个 gc 所用的时间
+jstat 常用的查询参数有：
+-class，查询类加载器信息；
+-compiler，JIT 相关信息；
+-gc，GC 堆状态；
+-gcnew，新生代统计信息；
+-gcutil，GC 堆统计汇总信息。
+
+
+3. jinfo（查询虚拟机参数配置工具）
+jinfo（Configuration Info for Java）用于查看和调整虚拟机各项参数。语法如下：
+jinfo <option> <pid>
