@@ -1,0 +1,484 @@
+MyBatis 初始化的第一个步骤就是加载和解析 mybatis-config.xml 这个全局配置文件，
+入口是 XMLConfigBuilder 这个 Builder 对象，它由 SqlSessionFactoryBuilder.build() 方法创建。
+XMLConfigBuilder 会解析 mybatis-config.xml 配置文件得到对应的 Configuration 全局配置对象，
+然后 SqlSessionFactoryBuilder 会根据得到的 Configuration 全局配置对象创建一个 DefaultSqlSessionFactory 对象返回给上层使用。
+package org.apache.ibatis.session;
+public class SqlSessionFactoryBuilder {
+
+  //省略其他代码
+  public SqlSessionFactory build(Reader reader, String environment, Properties properties) {
+    try {
+      XMLConfigBuilder parser = new XMLConfigBuilder(reader, environment, properties);
+      return build(parser.parse());
+    } catch (Exception e) {
+      throw ExceptionFactory.wrapException("Error building SqlSession.", e);
+    } finally {
+      ErrorContext.instance().reset();
+      try {
+        reader.close();
+      } catch (IOException e) {
+        // Intentionally ignore. Prefer previous error.
+      }
+    }
+  }
+  //省略其他代码
+}
+
+public class XMLConfigBuilder extends BaseBuilder {
+
+   // omit other codes
+  public XMLConfigBuilder(InputStream inputStream, String environment, Properties props) {
+    this(new XPathParser(inputStream, true, props, new XMLMapperEntityResolver()), environment, props);
+  }
+
+  private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
+    super(new Configuration());
+    ErrorContext.instance().resource("SQL Mapper Configuration");
+    this.configuration.setVariables(props);
+    this.parsed = false;
+    this.environment = environment;
+    this.parser = parser;
+  }
+   // omit other codes
+}
+
+public abstract class BaseBuilder {
+    // omit other codes
+  public BaseBuilder(Configuration configuration) {
+    this.configuration = configuration;
+    this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
+    this.typeHandlerRegistry = this.configuration.getTypeHandlerRegistry();
+  }
+  // omit other codes
+}
+
+
+BaseBuilder 抽象类扮演了构造者模式中 Builder 接口的角色，下面我们先来看 BaseBuilder 中各个字段的定义。
+1。configuration（Configuration 类型）：MyBatis 的初始化过程就是围绕 Configuration 对象展开的，
+我们可以认为 Configuration 是一个单例对象，MyBatis 初始化解析到的全部配置信息都会记录到 Configuration 对象中。
+
+2。typeAliasRegistry（TypeAliasRegistry 类型）：别名注册中心。
+比如，02 讲的订单系统示例中，我们在 mybatis-config.xml 配置文件中，使用 标签为很多类定义了别名。
+
+3。typeHandlerRegistry（TypeHandlerRegistry 类型）：TypeHandler 注册中心。
+除了定义别名之外，我们在 mybatis-config.xml 配置文件中，还可以使用 <typeHandlers> 标签添加自定义 TypeHandler 实现，
+实现数据库类型与 Java 类型的自定义转换，这些自定义的 TypeHandler 都会记录在这个 TypeHandlerRegistry 对象中。
+
+除了关联 Configuration 对象之外，BaseBuilder 还提供了另外两个基本能力：
+
+1。解析别名，核心逻辑是在 resolveAlias() 方法中实现的，主要依赖于 TypeAliasRegistry 对象；
+public class TypeAliasRegistry {
+    //omit other codes
+  public <T> Class<T> resolveAlias(String string) {
+    try {
+      if (string == null) {
+        return null;
+      }
+      // issue #748
+      String key = string.toLowerCase(Locale.ENGLISH);
+      Class<T> value;
+      if (typeAliases.containsKey(key)) {
+        value = (Class<T>) typeAliases.get(key);
+      } else {
+        value = (Class<T>) Resources.classForName(string);
+      }
+      return value;
+    } catch (ClassNotFoundException e) {
+      throw new TypeException("Could not resolve type alias '" + string + "'.  Cause: " + e, e);
+    }
+  }
+}
+
+2。解析 TypeHandler，核心逻辑是在 resolveTypeHandler() 方法中实现的，主要依赖于 TypeHandlerRegistry 对象。
+
+  protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, String typeHandlerAlias) {
+    if (typeHandlerAlias == null) {
+      return null;
+    }
+    Class<?> type = resolveClass(typeHandlerAlias);
+    if (type != null && !TypeHandler.class.isAssignableFrom(type)) {
+      throw new BuilderException("Type " + type.getName() + " is not a valid TypeHandler because it does not implement TypeHandler interface");
+    }
+    @SuppressWarnings("unchecked") // already verified it is a TypeHandler
+    Class<? extends TypeHandler<?>> typeHandlerType = (Class<? extends TypeHandler<?>>) type;
+    return resolveTypeHandler(javaType, typeHandlerType);
+  }
+
+  protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, Class<? extends TypeHandler<?>> typeHandlerType) {
+    if (typeHandlerType == null) {
+      return null;
+    }
+    // javaType ignored for injected handlers see issue #746 for full detail
+    TypeHandler<?> handler = typeHandlerRegistry.getMappingTypeHandler(typeHandlerType);
+    if (handler == null) {
+      // not in registry, create a new one
+      handler = typeHandlerRegistry.getInstance(javaType, typeHandlerType);
+    }
+    return handler;
+  }
+
+  首先我们来了解一下 XMLConfigBuilder 的核心字段。
+
+  1。parsed（boolean 类型）：状态标识字段，记录当前 XMLConfigBuilder 对象是否已经成功解析完 mybatis-config.xml 配置文件。
+
+  2。parser（XPathParser 类型）：XPathParser 对象是一个 XML 解析器，这里的 parser 对象就是用来解析 mybatis-config.xml 配置文件的。
+
+  3。environment（String 类型）： 标签定义的环境名称。
+
+  4。localReflectorFactory（ReflectorFactory 类型）：ReflectorFactory 接口的核心功能是实现对 Reflector 对象的创建和缓存。
+
+  在 SqlSessionFactoryBuilder.build() 方法中也可以看到，XMLConfigBuilder.parse() 方法触发了 mybatis-config.xml 配置文件的解析，
+  其中的 parseConfiguration() 方法定义了解析 mybatis-config.xml 配置文件的完整流程，核心步骤如下：
+  解析 <properties> 标签；
+  解析 <settings> 标签；
+  处理日志相关组件；
+  解析 <typeAliases> 标签；
+  解析 <plugins> 标签；
+  解析 <objectFactory> 标签；
+  解析 <objectWrapperFactory> 标签；
+  解析 <reflectorFactory> 标签；
+  解析 <environments> 标签；
+  解析 <databaseIdProvider> 标签；
+  解析 <typeHandlers> 标签；
+  解析 <mappers> 标签。
+   private void parseConfiguration(XNode root) {
+      try {
+        // issue #117 read properties first
+        propertiesElement(root.evalNode("properties"));
+        Properties settings = settingsAsProperties(root.evalNode("settings"));
+        loadCustomVfs(settings);
+        loadCustomLogImpl(settings);
+        typeAliasesElement(root.evalNode("typeAliases"));
+        pluginElement(root.evalNode("plugins"));
+        objectFactoryElement(root.evalNode("objectFactory"));
+        objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+        reflectorFactoryElement(root.evalNode("reflectorFactory"));
+        settingsElement(settings);
+        // read it after objectFactory and objectWrapperFactory issue #631
+        environmentsElement(root.evalNode("environments"));
+        databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+        typeHandlerElement(root.evalNode("typeHandlers"));
+        mapperElement(root.evalNode("mappers"));
+      } catch (Exception e) {
+        throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
+      }
+    }
+1. 处理<properties>标签
+我们可以通过 <properties> 标签定义 KV 信息供 MyBatis 使用，propertiesElement() 方法的核心逻辑就是解析 mybatis-config.xml 配置文件中的 <properties> 标签。
+从 <properties> 标签中解析出来的 KV 信息会被记录到一个 Properties 对象（也就是 Configuration 全局配置对象的 variables 字段），
+在后续解析其他标签的时候，MyBatis 会使用这个 Properties 对象中记录的 KV 信息替换匹配的占位符。
+2. 处理<settings>标签
+MyBatis 中有很多全局性的配置，例如，是否使用二级缓存、是否开启懒加载功能等，这些都是通过 mybatis-config.xml 配置文件中的 <settings> 标签进行配置的。
+XMLConfigBuilder.settingsAsProperties() 方法的核心逻辑就是解析 <settings> 标签，并将解析得到的配置信息记录到 Configuration 这个全局配置对象的同名属性中，具体实现如下：
+private Properties settingsAsProperties(XNode context) {
+    if (context == null) {
+        return new Properties();
+    }
+    // 处理<settings>标签的所有子标签，也就是<setting>标签，将其name属性和value属性
+    // 整理到Properties对象中保存
+    Properties props = context.getChildrenAsProperties();
+    // 创建Configuration对应的MetaClass对象
+    MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
+    // 检测Configuration对象中是否包含每个配置项的setter方法
+    for (Object key : props.keySet()) {
+        if (!metaConfig.hasSetter(String.valueOf(key))) {
+            throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
+        }
+    }
+    return props;
+}
+
+3. 处理<typeAliases>和<typeHandlers>标签
+XMLConfigBuilder 中提供了 typeAliasesElement() 方法和 typeHandlerElement() 方法，分别用来负责处理 <typeAliases> 标签和 <typeHandlers> 标签，
+解析得到的别名信息和 TypeHandler 信息就会分别记录到 TypeAliasRegistry 和 TypeHandlerRegistry（前面介绍 BaseHandler 的时候，我们已经简单介绍过这两者了）。
+private void typeHandlerElement(XNode parent) {
+    if (parent != null) {
+        for (XNode child : parent.getChildren()) { // 处理全部<typeHandler>子标签
+            if ("package".equals(child.getName())) { 
+                // 如果指定了package属性，则扫描指定包中所有的类，
+                // 并解析@MappedTypes注解，完成TypeHandler的注册
+                String typeHandlerPackage = child.getStringAttribute("name");
+                typeHandlerRegistry.register(typeHandlerPackage);
+            } else {
+                // 如果没有指定package属性，则尝试获取javaType、jdbcType、handler三个属性
+                String javaTypeName = child.getStringAttribute("javaType");
+                String jdbcTypeName = child.getStringAttribute("jdbcType");
+                String handlerTypeName = child.getStringAttribute("handler");
+                // 根据属性确定TypeHandler类型以及它能够处理的数据库类型和Java类型
+                Class<?> javaTypeClass = resolveClass(javaTypeName);
+                JdbcType jdbcType = resolveJdbcType(jdbcTypeName);
+                Class<?> typeHandlerClass = resolveClass(handlerTypeName);
+                // 调用TypeHandlerRegistry.register()方法注册TypeHandler
+                if (javaTypeClass != null) {
+                    if (jdbcType == null) {
+                        typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);
+                    } else {
+                        typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
+                    }
+                } else {
+                    typeHandlerRegistry.register(typeHandlerClass);
+                }
+            }
+        }
+    }
+}
+
+4. 处理<plugins>标签
+我们知道 MyBatis 是一个非常易于扩展的持久层框架，而插件就是 MyBatis 提供的一种重要扩展机制。
+
+我们可以自定义一个实现了 Interceptor 接口的插件来扩展 MyBatis 的行为，或是拦截 MyBatis 的一些默认行为。插件的工作机制我们会在后面的课时中详细分析，
+这里我们重点来看 MyBatis 初始化过程中插件配置的加载，也就是 XMLConfigBuilder 中的 pluginElement()方法，该方法的核心就是解析 <plugins> 标签中配置的自定义插件，具体实现如下：
+private void pluginElement(XNode parent) throws Exception {
+    if (parent != null) {
+        // 遍历全部的<plugin>子标签
+        for (XNode child : parent.getChildren()) {
+            // 获取每个<plugin>标签中的interceptor属性
+            String interceptor = child.getStringAttribute("interceptor");
+            // 获取<plugin>标签下的其他配置信息
+            Properties properties = child.getChildrenAsProperties();
+            // 初始化interceptor属性指定的自定义插件
+            Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
+            // 初始化插件的配置
+            interceptorInstance.setProperties(properties);
+            // 将Interceptor对象添加到Configuration的插件链中保存，等待后续使用
+            configuration.addInterceptor(interceptorInstance);
+        }
+    }
+}
+
+5. 处理<objectFactory>标签
+在前面《04 | MyBatis 反射工具箱：带你领略不一样的反射设计思路》中我们提到过，
+MyBatis 支持自定义 ObjectFactory 实现类和 ObjectWrapperFactory。XMLConfigBuilder 中的 objectFactoryElement() 方法就实现了加载自定义 ObjectFactory 实现类的功能，
+其核心逻辑就是解析 <objectFactory> 标签中配置的自定义 ObjectFactory 实现类，并完成相关的实例化操作，相关的代码实现如下：
+
+private void objectFactoryElement(XNode context) throws Exception {
+if (context != null) {
+    // 获取<objectFactory>标签的type属性
+    String type = context.getStringAttribute("type");
+    // 根据type属性值，初始化自定义的ObjectFactory实现
+    ObjectFactory factory = (ObjectFactory) resolveClass(type).getDeclaredConstructor().newInstance();
+    // 初始化ObjectFactory对象的配置
+    Properties properties = context.getChildrenAsProperties();
+    factory.setProperties(properties);
+    // 将ObjectFactory对象记录到Configuration这个全局配置对象中
+    configuration.setObjectFactory(factory);
+}
+除了 <objectFactory> 标签之外，我们还可以通过 <objectWrapperFactory> 标签和 <reflectorFactory> 标签配置自定义的 ObjectWrapperFactory 实现类和 ReflectorFactory 实现类，
+这两个标签的解析分别对应 objectWrapperFactoryElement() 方法和 reflectorFactoryElement() 方法，
+两者实现与 objectFactoryElement() 方法实现类似，这里就不再展示，你若感兴趣的话可以参考源码进行学习。
+
+6. 处理<environments>标签
+在 MyBatis 中，我们可以通过 <environment> 标签为不同的环境添加不同的配置，例如，线上环境、预上线环境、测试环境等，每个 <environment> 标签只会对应一种特定的环境配置。
+environmentsElement() 方法中实现了 XMLConfigBuilder 处理 <environments> 标签的核心逻辑，
+它会根据 XMLConfigBuilder.environment 字段值，拿到正确的 <environment> 标签，然后解析这个环境中使用的 TransactionFactory、DataSource 等核心对象，
+也就知道了 MyBatis 要请求哪个数据库、如何管理事务等信息。
+private void environmentsElement(XNode context) throws Exception {
+    if (context != null) {
+        if (environment == null) { // 未指定使用的环境id，默认获取default值 
+            environment = context.getStringAttribute("default");
+        }
+        // 获取<environment>标签下的所有配置
+        for (XNode child : context.getChildren()) {
+            // 获取环境id
+            String id = child.getStringAttribute("id");
+            if (isSpecifiedEnvironment(id)) { 
+                // 获取<transactionManager>、<dataSource>等标签，并进行解析，其中会根据配置信息初始化相应的TransactionFactory对象和DataSource对象
+                TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
+                DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
+                DataSource dataSource = dsFactory.getDataSource();
+                // 创建Environment对象，并关联创建好的TransactionFactory和DataSource
+                Environment.Builder environmentBuilder = new Environment.Builder(id)
+                        .transactionFactory(txFactory)
+                        .dataSource(dataSource);
+                // 将Environment对象记录到Configuration中，等待后续使用
+                configuration.setEnvironment(environmentBuilder.build());
+            }
+        }
+    }
+}
+
+7. 处理<databaseIdProvider>标签
+通过前面课时的介绍可知，在 MyBatis 中编写的都是原生的 SQL 语句，而很多数据库产品都会有一些 SQL 方言，这些方言与标准 SQL 不兼容。
+在 mybatis-config.xml 配置文件中，我们可以通过 <databaseIdProvider> 标签定义需要支持的全部数据库的 DatabaseId，
+在后续编写 Mapper 映射配置文件的时候，就可以为同一个业务场景定义不同的 SQL 语句（带有不同的 DataSourceId），来支持不同的数据库，这里就是靠 DatabaseId 来确定哪个 SQL 语句支持哪个数据库的。
+databaseIdProviderElement() 方法是 XMLConfigBuilder 处理 <databaseIdProvider> 标签的地方，其中的核心就是获取 DatabaseId 值，具体实现如下：
+
+private void databaseIdProviderElement(XNode context) throws Exception {
+    DatabaseIdProvider databaseIdProvider = null;
+    if (context != null) {
+        // 获取type属性值
+        String type = context.getStringAttribute("type");
+        if ("VENDOR".equals(type)) { // 兼容操作
+            type = "DB_VENDOR";
+        }
+        // 初始化DatabaseIdProvider
+        Properties properties = context.getChildrenAsProperties();
+        databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor().newInstance();
+        databaseIdProvider.setProperties(properties);
+    }
+    Environment environment = configuration.getEnvironment();
+    if (environment != null && databaseIdProvider != null) {
+        // 通过DataSource获取DatabaseId，并保存到Configuration中，等待后续使用
+        String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
+        configuration.setDatabaseId(databaseId);
+    }
+}
+
+可以看到，解析<databaseIdProvider> 标签之后会得到一个 DatabaseIdProvider 对象，其核心方法是 getDatabaseId() 方法，
+主要是根据前面解析得到的 DataSource 对象来生成 DatabaseId。DatabaseIdProvider 的继承关系如下图所示：
+从继承关系图中可以看出，DefaultDatabaseIdProvider 是个空实现，而且已被标记为过时了，所以这里我们就重点来看 VendorDatabaseIdProvider 实现。
+在 getDatabaseId() 方法中，VendorDatabaseIdProvider 首先会从 DataSource 中拿到数据库的名称，
+然后根据 <databaseIdProvider> 标签配置和 DataSource 返回的数据库名称，确定最终的 DatabaseId 标识，具体实现如下：
+public String getDatabaseId(DataSource dataSource) {
+    // 省略边界检查和异常处理
+    return getDatabaseName(dataSource);
+}
+private String getDatabaseName(DataSource dataSource) throws SQLException {
+    // 从数据库连接中，获取数据库名称
+    String productName = getDatabaseProductName(dataSource);
+    if (this.properties != null) {
+        // 根据<databaseIdProvider>标签配置，查找自定义数据库名称
+        for (Map.Entry<Object, Object> property : properties.entrySet()) {
+            if (productName.contains((String) property.getKey())) {
+                return (String) property.getValue(); // 返回配置的value
+            }
+        }
+        return null;
+    }
+    return productName;
+}
+
+8. 处理<mappers>标签
+除了 mybatis-config.xml 这个全局配置文件之外，MyBatis 初始化的时候还会加载 <mappers> 标签下定义的 Mapper 映射文件。<mappers> 标签中会指定 Mapper.xml 映射文件的位置，
+通过解析 <mappers> 标签，MyBatis 就能够知道去哪里加载这些 Mapper.xml 文件了。
+mapperElement() 方法就是 XMLConfigBuilder 处理 <mappers> 标签的具体实现，其中会初始化 XMLMapperBuilder 对象来加载各个 Mapper.xml 映射文件。
+同时，还会扫描 Mapper 映射文件相应的 Mapper 接口，处理其中的注解并将 Mapper 接口注册到 MapperRegistry 中。
+
+mapperElement() 方法的具体实现如下：
+private void mapperElement(XNode parent) throws Exception {
+    if (parent != null) {
+        for (XNode child : parent.getChildren()) { // 遍历每个子标签
+            if ("package".equals(child.getName())) {
+                // 如果指定了<package>子标签，则会扫描指定包内全部Java类型
+                String mapperPackage = child.getStringAttribute("name");
+                configuration.addMappers(mapperPackage);
+            } else {
+                // 解析<mapper>子标签，这里会获取resource、url、class三个属性，这三个属性互斥
+                String resource = child.getStringAttribute("resource");
+                String url = child.getStringAttribute("url");
+                String mapperClass = child.getStringAttribute("class");
+                // 如果<mapper>子标签指定了resource或是url属性，都会创建XMLMapperBuilder对象，
+                // 然后使用这个XMLMapperBuilder实例解析指定的Mapper.xml配置文件
+                if (resource != null && url == null && mapperClass == null) {
+                    ErrorContext.instance().resource(resource);
+                    InputStream inputStream = Resources.getResourceAsStream(resource);
+                    XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+                    mapperParser.parse();
+                } else if (resource == null && url != null && mapperClass == null) {
+                    ErrorContext.instance().resource(url);
+                    InputStream inputStream = Resources.getUrlAsStream(url);
+                    XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
+                    mapperParser.parse();
+                } else if (resource == null && url == null && mapperClass != null) {
+                    // 如果<mapper>子标签指定了class属性，则向MapperRegistry注册class属性指定的Mapper接口
+                    Class<?> mapperInterface = Resources.classForName(mapperClass);
+                    configuration.addMapper(mapperInterface);
+                } else {
+                    throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
+                }
+            }
+        }
+    }
+}
+
+
+Mapper.xml 映射文件解析全流程
+在上一讲分析 mybatis-config.xml 配置文件解析流程的时候我们看到，在 mybatis-config.xml 配置文件中可以定义多个 <mapper> 标签指定 Mapper 配置文件的地址，
+MyBatis 会为每个 Mapper.xml 映射文件创建一个 XMLMapperBuilder 实例完成解析。
+
+与 XMLConfigBuilder 类似，XMLMapperBuilder也是具体构造者的角色，继承了 BaseBuilder 这个抽象类，解析 Mapper.xml 映射文件的入口是 XMLMapperBuilder.parse() 方法，其核心步骤如下：
+执行 configurationElement() 方法解析整个Mapper.xml 映射文件的内容；
+获取当前 Mapper.xml 映射文件指定的 Mapper 接口，并进行注册；
+处理 configurationElement() 方法中解析失败的 <resultMap> 标签；
+处理 configurationElement() 方法中解析失败的 <cache-ref> 标签；
+处理 configurationElement() 方法中解析失败的SQL 语句标签。
+
+可以清晰地看到，configurationElement() 方法才是真正解析 Mapper.xml 映射文件的地方，其中定义了处理 Mapper.xml 映射文件的核心流程：
+
+获取 <mapper> 标签中的 namespace 属性，同时会进行多种边界检查；
+解析 <cache> 标签；
+解析 <cache-ref> 标签；
+解析 <resultMap> 标签；
+解析 <sql> 标签；
+解析 <select>、<insert>、<update>、<delete> 等 SQL 标签。
+
+下面我们就按照顺序逐一介绍这些方法的核心实现。
+
+1. 处理 <cache> 标签
+我们知道 Cache 接口及其实现是MyBatis 一级缓存和二级缓存的基础，其中，一级缓存是默认开启的，而二级缓存默认情况下并没有开启，如有需要，可以通过<cache>标签为指定的namespace 开启二级缓存。
+
+XMLMapperBuilder 中解析 <cache> 标签的核心逻辑位于 cacheElement() 方法之中，其具体步骤如下：
+
+获取 <cache> 标签中的各项属性（type、flushInterval、size 等属性）；
+
+读取 <cache> 标签下的子标签信息，这些信息将用于初始化二级缓存；
+
+MapperBuilderAssistant 会根据上述配置信息，创建一个全新的Cache 对象并添加到 Configuration.caches 集合中保存。
+
+也就是说，解析 <cache> 标签得到的所有信息将会传给 MapperBuilderAssistant 完成 Cache 对象的创建，创建好的Cache 对象会添加到 Configuration.caches 集合中，
+这个 caches 字段是一个StrictMap<Cache> 类型的集合，其中的 Key是Cache 对象的唯一标识，默认值是Mapper.xml 映射文件的namespace，Value 才是真正的二级缓存对应的 Cache 对象。
+
+这里我们简单介绍一下 StrictMap的特性。
+
+StrictMap 继承了 HashMap，并且覆盖了 HashMap 的一些行为，例如，相较于 HashMap 的 put() 方法，StrictMap 的 put() 方法有如下几点不同：
+
+如果检测到重复 Key 的写入，会直接抛出异常；
+
+在没有重复 Key的情况下，会正常写入 KV 数据，与此同时，还会根据 Key产生一个 shortKey，shortKey 与完整 Key 指向同一个 Value 值；
+
+如果 shortKey 已经存在，则将 value 修改成 Ambiguity 对象，Ambiguity 对象表示这个 shortKey 存在二义性，后续通过 StrictMap的get() 方法获取该 shortKey 的时候，会抛出异常。
+
+了解了 StrictMap 这个集合类的特性之后，我们回到MapperBuilderAssistant 这个类继续分析，在它的 useNewCache() 方法中，会根据前面解析得到的配置信息，通过 CacheBuilder 创建 Cache 对象。
+
+通过名字你就能猜测到 CacheBuilder 是 Cache 的构造者，CacheBuilder 中最核心的方法是build() 方法，其中会根据传入的配置信息创建底层存储数据的 Cache 对象以及相关的 Cache 装饰器，具体实现如下：
+
+
+public Cache build() {
+    // 将implementation默认值设置为PerpetualCache，在decorators集合中默认添加LruCache装饰器，
+    // 都是在setDefaultImplementations()方法中完成的
+    setDefaultImplementations();
+    // 通过反射，初始化implementation指定类型的对象
+    Cache cache = newBaseCacheInstance(implementation, id);
+    // 创建Cache关联的MetaObject对象，并根据properties设置Cache中的各个字段
+    setCacheProperties(cache);
+    // 根据上面创建的Cache对象类型，决定是否添加装饰器
+    if (PerpetualCache.class.equals(cache.getClass())) {
+        // 如果是PerpetualCache类型，则为其添加decorators集合中指定的装饰器
+        for (Class<? extends Cache> decorator : decorators) {
+            // 通过反射创建Cache装饰器
+            cache = newCacheDecoratorInstance(decorator, cache);
+            // 依赖MetaObject将properties中配置信息设置到Cache的各个属性中，同时调用Cache的initialize()方法完成初始化
+            setCacheProperties(cache);
+        }
+        // 根据readWrite、blocking、clearInterval等配置，
+        // 添加SerializedCache、ScheduledCache等装饰器
+        cache = setStandardDecorators(cache);
+    } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
+        // 如果不是PerpetualCache类型，就是其他自定义类型的Cache，则添加一个LoggingCache装饰器
+        cache = new LoggingCache(cache);
+    }
+    return cache;
+}
+
+2. 处理<cache-ref>标签
+通过上述介绍我们知道，可以通过 <cache> 标签为每个 namespace 开启二级缓存，同时还会将 namespace 与关联的二级缓存 Cache对象记录到 Configuration.caches 集合中，
+也就是说二级缓存是 namespace 级别的。但是，在有的场景中，我们会需要在多个 namespace 共享同一个二级缓存，也就是共享同一个 Cache 对象。
+
+为了解决这个需求，MyBatis提供了 <cache-ref> 标签来引用另一个 namespace 的二级缓存。cacheRefElement() 方法是处理 <cache-ref> 标签的核心逻辑所在，
+在 Configuration 中维护了一个 cacheRefMap 字段（HashMap<String,String> 类型），其中的 Key 是 <cache-ref> 标签所属的namespace 标识，Value 值是 <cache-ref> 标签引用的 namespace 值，
+这样的话，就可以将两个namespace 关联起来了，即这两个 namespace 共用一个 Cache对象。
+
+这里会使用到一个叫 CacheRefResolver 的 Cache 引用解析器。CacheRefResolver 中记录了被引用的 namespace以及当前 namespace 关联的MapperBuilderAssistant 对象。
+前面在解析 <cache>标签的时候我们介绍过，MapperBuilderAssistant 会在 useNewCache() 方法中通过 CacheBuilder 创建新的 Cache 对象，并记录到 currentCache 字段。
+而这里解析 <cache-ref> 标签的时候，MapperBuilderAssistant 会通过 useCacheRef() 方法从 Configuration.caches 集合中，
+根据被引用的namespace 查找共享的 Cache 对象来初始化 currentCache，而不再创建新的Cache 对象，从而实现二级缓存的共享。

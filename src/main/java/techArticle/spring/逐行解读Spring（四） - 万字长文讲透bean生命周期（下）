@@ -1,0 +1,639 @@
+三、bean实例化
+3. createBean，真正的bean初始化逻辑
+3.3. populateBean，对bean进行自动装配
+接下来我们继续回到bean实例化的主流程（不知道同学们会不会已经忘了看到哪了=.=），调用完beanPostProcessor的一个埋点之后，我们就进入自动装配的流程了，也就是这个：
+// 自动装配
+populateBean(beanName, mbd, instanceWrapper);
+// 执行初始化方法
+exposedObject = initializeBean(beanName, exposedObject, mbd);
+复制代码
+跟着往下看：
+protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+
+    // 这里又是一个埋点，放入三级缓存之后，自动装配之前
+    if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+                // 可以看到，这个埋点是bean实例和beanName传入了
+                // 所以我们可以在这个埋点做一下自定义的属性的注入（拿到实例了很好说嘛），
+                // 比如公共字段的set啦（反正我没在这里拓展过）
+                // 不过需要主要的是，如果这个埋点返回false的话，是认为不需要spring来进行自动装配了
+                // 会直接结束当前方法，跳过该bean的自动装配流程的
+                if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+                    return;
+                }
+            }
+        }
+    }
+
+    PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
+    // 这里是通过resolvedAutowireMode，来通过不同的方式注入propertyValues中的属性了
+    // 这个propertyValues就是我们xml标签解析中的property标签封装的对象啦
+    // 当然我们后期也可以修改
+    int resolvedAutowireMode = mbd.getResolvedAutowireMode();
+    if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
+        MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
+        if (resolvedAutowireMode == AUTOWIRE_BY_NAME) {
+            // 通过名称注入，其实就是getBean(beanName)
+            autowireByName(beanName, mbd, bw, newPvs);
+        }
+        if (resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
+            // 这里逻辑稍微复杂点，不过简单说就是getBean(beanName, beanClass)而已
+            autowireByType(beanName, mbd, bw, newPvs);
+        }
+        pvs = newPvs;
+    }
+	// 到这里为止就处理好了beanDefinition中封装的propertyValues依赖的信息
+
+    boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
+    boolean needsDepCheck = (mbd.getDependencyCheck() != AbstractBeanDefinition.DEPENDENCY_CHECK_NONE);
+    // 这里又是一个埋点啦
+    PropertyDescriptor[] filteredPds = null;
+    if (hasInstAwareBpps) {
+        if (pvs == null) {
+            pvs = mbd.getPropertyValues();
+        }
+
+        // 这个埋点的时机是在把pvs的值注入到bean实例之前，给一个埋点，
+        // 允许beanPostProcessor修改pvs和bean实例的信息
+        // 所以之前创建bean实例之后的埋点收集的属性注入的信息
+        // 这里就可以用这些信息，来修改pvs或者bean实例了
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+                PropertyValues pvsToUse = ibp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
+                // 如果通过新接口没做任何逻辑，则还是走旧接口试下
+                if (pvsToUse == null) {
+                    if (filteredPds == null) {
+                        filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
+                    }
+                    // 这个接口在5.1版本基本已经废弃了，我们就不看了
+                    pvsToUse = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
+                    if (pvsToUse == null) {
+                        return;
+                    }
+                }
+                pvs = pvsToUse;
+            }
+        }
+    }
+    // 依赖检查，不讲
+    if (needsDepCheck) {
+        if (filteredPds == null) {
+            filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
+        }
+        checkDependencies(beanName, mbd, filteredPds, pvs);
+    }
+
+    if (pvs != null) {
+        // 真正把pvs中的属性注入到bean实例里面去
+        applyPropertyValues(beanName, mbd, bw, pvs);
+    }
+}
+复制代码
+3.3.1. @Resource、@Autowired的注入逻辑
+xml方式配置的信息的注入我这边就不仔细讲了，主要现在这种方式也用的很少，并且对我们了解spring的逻辑没有太大的帮助，需要注意的是，beanDefinition的propertyValues中的属性的注入，是调用bean对象的对应set方法进行注入的，如果该属性没有set方法，注入会报错并且导致spring启动失败。
+解下来我们稍微讲一下基于注解的属性注入方式。因为@Resource和@Autowired注解的信息最后都封装成了InjectionMetadata，那么他们的注入的逻辑应该也是差别不大的，我们可以看一下：
+// CommonAnnotationBeanPostProcessor
+@Override
+public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+    // 这一次肯定能从缓存中拿到了，之前已经构建了
+    InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
+    try {
+        // 注入
+        metadata.inject(bean, beanName, pvs);
+    }
+    catch (Throwable ex) {
+        throw new BeanCreationException(beanName, "Injection of resource dependencies failed", ex);
+    }
+    return pvs;
+}
+// AutowiredAnnotationBeanPostProcessor
+@Override
+public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+    InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
+    try {
+        metadata.inject(bean, beanName, pvs);
+    }
+    catch (BeanCreationException ex) {
+        throw ex;
+    }
+    catch (Throwable ex) {
+        throw new BeanCreationException(beanName, "Injection of autowired dependencies failed", ex);
+    }
+    return pvs;
+}
+复制代码
+逻辑确实是一样的，都是委托给InjectionMetadata来注入：
+public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+    Collection<InjectedElement> checkedElements = this.checkedElements;
+    Collection<InjectedElement> elementsToIterate =
+        (checkedElements != null ? checkedElements : this.injectedElements);
+    if (!elementsToIterate.isEmpty()) {
+        for (InjectedElement element : elementsToIterate) {
+            // 接下来委托给具体的注入元素来操作
+            // 这里往下就有点不一样了
+            element.inject(target, beanName, pvs);
+        }
+    }
+}
+复制代码
+我们接下来简单讲一下@Resource的注入逻辑，由于ResourceElement没有重写inject方法，所以它走的还是父类InjectedElement的逻辑：
+protected void inject(Object target, @Nullable String requestingBeanName, @Nullable PropertyValues pvs)
+    throws Throwable {
+    // 可以看到，就是通过isField判断是属性还是方法
+    // 然后直接通过反射把属性设置或者调用方法了
+    if (this.isField) {
+        Field field = (Field) this.member;
+        ReflectionUtils.makeAccessible(field);
+        // 通过这个getResourceToInject来获取了需要注入的资源
+        field.set(target, getResourceToInject(target, requestingBeanName));
+    }
+    else {
+        if (checkPropertySkipping(pvs)) {
+            return;
+        }
+        try {
+            Method method = (Method) this.member;
+            ReflectionUtils.makeAccessible(method);
+            method.invoke(target, getResourceToInject(target, requestingBeanName));
+        }
+        catch (InvocationTargetException ex) {
+            throw ex.getTargetException();
+        }
+    }
+}
+复制代码
+我们来看一下这个模板方法inject中留给子类实现的getResourceToInject方法在ResourceElement中的实现：
+@Override
+protected Object getResourceToInject(Object target, @Nullable String requestingBeanName) {
+    // 懒加载的逻辑我们就暂时不看了
+    // 解释一下，无非就是把需要注入的类代理一层，暂时不使用getBean获取需要注入的类的实例
+    // 当我们通过这个懒加载的属性去做任何动作时，代理层就会先根据这个属性的信息，去从beanFactory.getBean
+    return (this.lazyLookup ? buildLazyResourceProxy(this, requestingBeanName) :
+            getResource(this, requestingBeanName));
+}
+
+protected Object getResource(LookupElement element, @Nullable String requestingBeanName)
+    throws NoSuchBeanDefinitionException {
+    // ...
+    return autowireResource(this.resourceFactory, element, requestingBeanName);
+}
+protected Object autowireResource(BeanFactory factory, LookupElement element, @Nullable String requestingBeanName)
+    throws NoSuchBeanDefinitionException {
+    Object resource;
+    Set<String> autowiredBeanNames;
+    String name = element.name;
+
+    if (factory instanceof AutowireCapableBeanFactory) {
+        AutowireCapableBeanFactory beanFactory = (AutowireCapableBeanFactory) factory;
+        DependencyDescriptor descriptor = element.getDependencyDescriptor();
+        if (this.fallbackToDefaultTypeMatch && element.isDefaultName && !factory.containsBean(name)) {
+            autowiredBeanNames = new LinkedHashSet<>();
+            // 通过beanFactory获取依赖的bean实例
+            resource = beanFactory.resolveDependency(descriptor, requestingBeanName, autowiredBeanNames, null);
+            if (resource == null) {
+                throw new NoSuchBeanDefinitionException(element.getLookupType(), "No resolvable resource object");
+            }
+        }
+        else {
+            // 通过beanName获取依赖的bean实例
+            resource = beanFactory.resolveBeanByName(name, descriptor);
+            autowiredBeanNames = Collections.singleton(name);
+        }
+    }
+    else {
+        // 通过beanFactory获取bean
+        resource = factory.getBean(name, element.lookupType);
+        autowiredBeanNames = Collections.singleton(name);
+    }
+
+    // 注册bean的依赖信息
+    if (factory instanceof ConfigurableBeanFactory) {
+        ConfigurableBeanFactory beanFactory = (ConfigurableBeanFactory) factory;
+        for (String autowiredBeanName : autowiredBeanNames) {
+            if (requestingBeanName != null && beanFactory.containsBean(autowiredBeanName)) {
+                beanFactory.registerDependentBean(autowiredBeanName, requestingBeanName);
+            }
+        }
+    }
+    return resource;
+}
+复制代码
+这一块通过beanFactory来加载bean的逻辑就暂时不深入了，里面逻辑比较绕，之后如果有机会，我再单独开博客讲。
+但是我们要知道，这个逻辑不管它怎么绕，它最终无非还是要通过beanFactory.getBean来获取依赖的bean的嘛，我都拿到这个注入元素的信息了，拿到这个需要注入的Field或者Method了，我难到还不知道我需要注入的bean是什么类型么？拿到类型我们肯定就能从beanFactory获取到实例啦。
+3.4. initializeBean调用bean的初始化方法
+不知道同学们日常开发时，有没有使用过XxxAware接口来获取一些spring的组件，或者是使用@PostConstruct注解/实现InitializingBean接口来做一些bean的初始化逻辑呢？initializeBean方法就是处理这些逻辑的地方。
+一个bean并不是说实例创建好，做完依赖注入之后，就可以交给用户使用了。spring还需要对这个bean做一些初始化工作。
+// 自动装配
+populateBean(beanName, mbd, instanceWrapper);
+// 执行初始化方法
+exposedObject = initializeBean(beanName, exposedObject, mbd);
+复制代码
+接下来，我们就一起看一下这个initializeBean的逻辑：
+protected Object initializeBean(final String beanName, final Object bean, @Nullable RootBeanDefinition mbd) {
+    // 调用aware方法 -- 需要注意的是这里只调用了一部分aware接口的方法
+    // 还有一部分XxxAware接口的调用是通过beanPostProcessor来实现的
+    invokeAwareMethods(beanName, bean);
+
+    Object wrappedBean = bean;
+    if (mbd == null || !mbd.isSynthetic()) {
+        // bean实例初始化之前的埋点
+        wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+    }
+
+    try {
+        // 调用初始化方法
+        invokeInitMethods(beanName, wrappedBean, mbd);
+    }
+    catch (Throwable ex) {
+        throw new BeanCreationException(
+            (mbd != null ? mbd.getResourceDescription() : null),
+            beanName, "Invocation of init method failed", ex);
+    }
+    if (mbd == null || !mbd.isSynthetic()) {
+        // bean实例初始化之后的埋点
+        wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+    }
+
+    return wrappedBean;
+}
+复制代码
+可以看到，逻辑也是比较清晰的，主要分为四步，接下来我们一步一步讲解。
+3.4.1. invokeAwareMethods调用aware接口
+spring提供了一个标记接口Aware，用来给用户标记当前bean是需要获取某些spring能提供的组件/信息的：
+public interface Aware {
+	// 这是一个空的标记接口
+}
+复制代码
+而具体用户的bean需要spring提供什么组件/信息，则可以选择性的实现Aware的某个子接口。例如，如果我们的某个bean中需要拿到实例化它的beanFactory，那么我们可以实现BeanFactoryAware接口：
+public interface BeanFactoryAware extends Aware {
+	// bean中实现这接口就可以了，我们可以把beanFactory的引用保存下来
+	void setBeanFactory(BeanFactory beanFactory) throws BeansException;
+}
+复制代码
+那么对于这一些Aware接口的调用，spring是怎么做的呢？其实这也分为了两部分，一部分就是我们现在讲到的invokeAwareMethods方法：
+private void invokeAwareMethods(final String beanName, final Object bean) {
+    if (bean instanceof Aware) {
+        // 判断->强转->调用一目了然，就不多说了
+        if (bean instanceof BeanNameAware) {
+            ((BeanNameAware) bean).setBeanName(beanName);
+        }
+        if (bean instanceof BeanClassLoaderAware) {
+            ClassLoader bcl = getBeanClassLoader();
+            if (bcl != null) {
+                ((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);
+            }
+        }
+        if (bean instanceof BeanFactoryAware) {
+            ((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
+        }
+    }
+}
+复制代码
+就是这样简单的判断->强转->调用就可以了，但是有同学可能会说了，这里才处理了三种Aware接口的情况，平常我用的ApplicationContextAware那些的处理逻辑怎么没有？
+其实这里也可以算是spring早期给自己挖的坑了，invokeAwareMethods这个方法是在bean初始化的主流程里的，属于很基础的代码。可是随着spring的慢慢开发，可能会有各类开发人员开始给spring团队提需求，希望新增一个XxxAware接口。这个时候spring团队一看，有些Aware接口确实可以由spring管理起来，这难道继续在这个invokeAwareMethods方法里加if-else么？显然是不行的，这违反了开闭原则！
+同学们，如果是你，面对这种新增XxxAware的需求，你会怎么处理呢？
+3.4.2. postProcessBeforeInitialization埋点调用
+invokeAwareMethods方法之后，我们马上有一个埋点的调用：
+wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+
+public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
+    throws BeansException {
+    Object result = existingBean;
+    for (BeanPostProcessor processor : getBeanPostProcessors()) {
+        // 调用BeanPostProcessor.postProcessBeforeInitialization
+        Object current = processor.postProcessBeforeInitialization(result, beanName);
+        if (current == null) {
+            return result;
+        }
+        result = current;
+    }
+    return result;
+}
+复制代码
+说起来才发现这个postProcessBeforeInitialization居然是BeanPostProcessor接口的方法，而BeanPostProcessor的声明的两个方法其实就是这个initializeBean方法中的两个埋点。那是不是说明其实第一版的spring是只有这两个埋点的，随着框架的发展，才慢慢新增其他的继承BeanPostProcessor接口的埋点接口并且在bean初始化流程中被调用的呢？（这个我也不确定，毕竟也没看过第一版的代码）
+说回这个postProcessBeforeInitialization方法，这里也简单讲几个与我们平常使用相关的例子。
+3.4.2.1. 使用ApplicationContextAwareProcessor处理XxxAware接口需求
+刚刚讲invokeAwareMethods方法的时候有提过，对于日益增多的XxxAware接口需求，spring应该怎么做才会更优雅一点，符合开闭原则呢？
+spring的答案是，使用postProcessBeforeInitialization这个埋点方法，所以有了ApplicationContextAwareProcessor，我们直接来看下它的埋点方法：
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    // 判断是否是需要处理的Aware接口
+    if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
+          bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
+          bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware)){
+        return bean;
+    }
+    invokeAwareInterfaces(bean);
+    return bean;
+}
+
+private void invokeAwareInterfaces(Object bean) {
+    if (bean instanceof EnvironmentAware) {
+        ((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
+    }
+    if (bean instanceof EmbeddedValueResolverAware) {
+        ((EmbeddedValueResolverAware) bean).setEmbeddedValueResolver(this.embeddedValueResolver);
+    }
+    // ...跳过了其他XxxAware接口的处理逻辑，都是一样的
+}
+复制代码
+可以看到，逻辑还是挺简单的，差不多就是把invokeAwareMethods中的模式搬过来了。
+3.4.2.2. InitDestroyAnnotationBeanPostProcessor生命周期方法的调用
+如果同学们不至于太健忘的话，应该还记得我们刚刚有讲过一个CommonAnnotationBeanPostProcessor，它会在bean创建之后，依赖注入之前，调用postProcessMergedBeanDefinition这个埋点方法收集@PostConstruct、@PreDestroy注解的信息，而这个beanPostProcessor是继承自InitDestroyAnnotationBeanPostProcessor的，InitDestroyAnnotationBeanPostProcessor的两个埋点方法中就分别调用了收集到的生命周期方法：
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());
+    try {
+        metadata.invokeInitMethods(bean, beanName);
+    } catch (Throwable ex) {
+        throw new BeanCreationException(...);
+    }
+    return bean;
+}
+复制代码
+获取LifecycleMetadata的流程就不再讲了，这里肯定是直接从缓存拿到了，我们来看一下invokeInitMethods方法：
+public void invokeInitMethods(Object target, String beanName) throws Throwable {
+    Collection<LifecycleElement> checkedInitMethods = this.checkedInitMethods;
+    Collection<LifecycleElement> initMethodsToIterate =
+        (checkedInitMethods != null ? checkedInitMethods : this.initMethods);
+    if (!initMethodsToIterate.isEmpty()) {
+        for (LifecycleElement element : initMethodsToIterate) {
+            // 调用方法
+            element.invoke(target);
+        }
+    }
+}
+
+public void invoke(Object target) throws Throwable {
+    // 直接就是反射调用了
+    ReflectionUtils.makeAccessible(this.method);
+    this.method.invoke(target, (Object[]) null);
+}
+复制代码
+所以从我们现在的角度来看，初始化方法中，通过@PostConstruct注解来声明的方法会最先被调用。
+3.4.3. invokeInitMethods调用初始化方法
+接下来就是初始化方法的调用了，这里主要需要处理两种方法的调用：
+
+实现了InitializingBean接口的bean，需要调用InitializingBean#afterPropertiesSet
+beanDefinition中有initMethodName属性的（比如通过xml解析加载来的）
+
+我们来看一下逻辑：
+protected void invokeInitMethods(String beanName, final Object bean, @Nullable RootBeanDefinition mbd)
+    throws Throwable {
+
+    boolean isInitializingBean = (bean instanceof InitializingBean);
+    if (isInitializingBean && (mbd == null || !mbd.isExternallyManagedInitMethod("afterPropertiesSet"))) {
+        // 调用InitializingBean.afterPropertiesSet
+        ((InitializingBean) bean).afterPropertiesSet();
+    }
+
+    if (mbd != null && bean.getClass() != NullBean.class) {
+        String initMethodName = mbd.getInitMethodName();
+        if (StringUtils.hasLength(initMethodName) &&
+            !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
+            !mbd.isExternallyManagedInitMethod(initMethodName)) {
+            // 调用beanDefinition中的initMethod
+            // 就是个反射调用，我们就不再看了
+            invokeCustomInitMethod(beanName, bean, mbd);
+        }
+    }
+}
+复制代码
+稍微说一下这个isExternallyManagedInitMethod判断的作用吧，这个判断主要是避免一个方法被调用两次的。在我们的beanDefinition中有一个Set<String> externallyManagedInitMethods用来记录哪些方法是不需要再调用了（销毁方法同理），而生命周期注解收集的时候，会把收集到的初始化方法的方法名塞进去，这样到这里invokeInitMethods的逻辑中，如果是被@PostConstruct注解收集并且调用过的方法，这里是不会再被调用的。
+3.4.4. postProcessAfterInitialization埋点调用
+初始化方法调用完后，又有一个埋点方法，这是这个bean创建好后，返回到用户手中之前的最后一个埋点了，这个时候bean中的所有信息都是齐全的。同学们可以想一想，我们可以在这个埋点做什么工作呢？
+wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+
+public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
+    throws BeansException {
+
+    Object result = existingBean;
+    for (BeanPostProcessor processor : getBeanPostProcessors()) {
+        // 初始化之后的埋点
+        Object current = processor.postProcessAfterInitialization(result, beanName);
+        if (current == null) {
+            return result;
+        }
+        result = current;
+    }
+    return result;
+}
+复制代码
+我们著名的aop的代理类创建的逻辑，就是在这个埋点做的。具体的入口类是AbstractAutoProxyCreator：
+public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
+    if (bean != null) {
+        Object cacheKey = getCacheKey(bean.getClass(), beanName);
+        if (this.earlyProxyReferences.remove(cacheKey) != bean) {
+            // 如果需要的话，返回一个代理类
+            return wrapIfNecessary(bean, beanName, cacheKey);
+        }
+    }
+    return bean;
+}
+复制代码
+不过aop的逻辑这里就不多讲了，期待我之后的博客吧~
+3.4.5. registerDisposableBeanIfNecessary注册bean的销毁逻辑
+整个bean初始化完成之后，我们还需要做最后一步，那就是注册bean的销毁逻辑：
+// 忘了这个逻辑在哪的同学可以跳回3.0目录看下
+registerDisposableBeanIfNecessary(beanName, bean, mbd);
+
+protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd) {
+    // 如果是非prototype且需要销毁的bean
+    if (!mbd.isPrototype() && requiresDestruction(bean, mbd)) {
+        // 如果是单例的
+        if (mbd.isSingleton()) {
+            // 直接包装成DisposableBeanAdapter且DefaultSingletonBeanRegistry
+            // DefaultSingletonBeanRegistry#registerDisposableBean
+            registerDisposableBean(beanName,
+                                   new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
+        }
+        else {
+            // 如果是自定义的scope
+            Scope scope = this.scopes.get(mbd.getScope());
+            if (scope == null) {
+                throw new IllegalStateException(...);
+            }
+            // 像scope注册
+            scope.registerDestructionCallback(beanName,
+                                              new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
+        }
+    }
+}
+复制代码
+我们先看下requiresDestruction的逻辑：
+protected boolean requiresDestruction(Object bean, RootBeanDefinition mbd) {
+    return (bean.getClass() != NullBean.class &&
+            (DisposableBeanAdapter.hasDestroyMethod(bean, mbd) || (hasDestructionAwareBeanPostProcessors() &&
+                                                                   DisposableBeanAdapter.hasApplicableProcessors(bean, getBeanPostProcessors()))));
+}
+复制代码
+逐一看一下DisposableBeanAdapter中的这两个方法：
+public static boolean hasDestroyMethod(Object bean, RootBeanDefinition beanDefinition) {
+    // 如果实现了DisposableBean接口或者AutoCloseable接口
+    // 认为有销毁方法
+    if (bean instanceof DisposableBean || bean instanceof AutoCloseable) {
+        return true;
+    }
+    // 获取beanDefinition中的destoryMethodName属性
+    String destroyMethodName = beanDefinition.getDestroyMethodName();
+    if (AbstractBeanDefinition.INFER_METHOD.equals(destroyMethodName)) {
+        // 如果是一个特殊值-(inferred)，就看这个类有没有close或者shutdown方法
+        return (ClassUtils.hasMethod(bean.getClass(), CLOSE_METHOD_NAME) ||
+                ClassUtils.hasMethod(bean.getClass(), SHUTDOWN_METHOD_NAME));
+    }
+    // 看下有没有配置
+    return StringUtils.hasLength(destroyMethodName);
+}
+// 如果容器中有注册DestructionAwareBeanPostProcessor，则还会有以下这个方法的判断
+public static boolean hasApplicableProcessors(Object bean, List<BeanPostProcessor> postProcessors) {
+    if (!CollectionUtils.isEmpty(postProcessors)) {
+        for (BeanPostProcessor processor : postProcessors) {
+            if (processor instanceof DestructionAwareBeanPostProcessor) {
+                DestructionAwareBeanPostProcessor dabpp = (DestructionAwareBeanPostProcessor) processor;
+                if (dabpp.requiresDestruction(bean)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+复制代码
+简单说一下，InitDestroyAnnotationBeanPostProcessor实现了DestructionAwareBeanPostProcessor，大家应该知道这个requiresDestruction的逻辑大概是怎么样了吧？
+@Override
+public boolean requiresDestruction(Object bean) {
+    // 就看有没有收集到销毁方法就好了
+    return findLifecycleMetadata(bean.getClass()).hasDestroyMethods();
+}
+复制代码
+确定是一个需要销毁的单例bean之后，spring会把它包装成一个DisposableBean并且注册到DefaultSingletonBeanRegistry：
+public void registerDisposableBean(String beanName, DisposableBean bean) {
+    synchronized (this.disposableBeans) {
+        // 可以看到是一个map而已
+        this.disposableBeans.put(beanName, bean);
+    }
+}
+复制代码
+3.5. doCreateBean小结
+doCreateBean的逻辑我们讲完了，总体来讲，doCreateBean方法创建了一个可以直接使用的bean并返回给了调用方。回顾一下，它主要做了以下几件事：
+
+创建bean实例，可能是通过工厂方法或者构造器，且参数都支持依赖注入。
+依赖注入，解决@Resource、@Autowired等注解注入以及beanDefinition的propertyValues属性注入问题。
+初始化逻辑
+
+XxxAware接口调用
+初始化方法调用，初始化注解(@PostConstruct)->初始化接口(InitializingBean)->beanDefinition的initMethodName属性（例如xml配置）
+
+
+注册单例bean的销毁逻辑
+
+当然其中还有多个埋点方法的调用，这一部分我尽量之后补充一个时序图。
+四、bean的销毁
+刚刚我们有看到，实例化bean时，我们会注册一个销毁逻辑到对应的scope，而对于单例bean来讲，其实可以说单例的scope就是由spring提供的，这个时候我们是把需要销毁的bean包装成了一个DisposableBeanAdapter并注册到了DefaultSingletonBeanRegistry的disposableBeans容器中。
+那么我们具体又是如何触发销毁方法的呢？我们随意找一个常用的ApplicationContext往上追踪，会发现它实现了ConfigurableApplicationContext接口，而这个接口中定义了销毁的close方法（refresh方法也是这个接口定义的）。我们找一个实现跟一下，会发现最终调用到了DefaultSingletonBeanRegistry#destroySingletons方法：
+public void AbstractApplicationContext#close() {
+    // ...
+    doClose();
+    // ...
+}
+public void AbstractApplicationContext#doClose() {
+    // ...
+    destroyBeans();
+    // ...
+}
+protected void AbstractApplicationContext#destroyBeans() {
+    getBeanFactory().destroySingletons();
+}
+public void DefaultSingletonBeanRegistry#destroySingletons() {
+    String[] disposableBeanNames;
+    // 我们注册的disposableBeans
+    synchronized (this.disposableBeans) {
+        disposableBeanNames = StringUtils.toStringArray(this.disposableBeans.keySet());
+    }
+    for (int i = disposableBeanNames.length - 1; i >= 0; i--) {
+        // 按注册的倒序销毁。主要是避免bean之间资源依赖，
+        // 先创建的bean肯定不会依赖后创建的bean的资源，所以先创建的bean先销毁
+        destroySingleton(disposableBeanNames[i]);
+    }
+}
+public void DefaultSingletonBeanRegistry#destroySingleton(String beanName) {
+    // 从IOC容器删除
+    removeSingleton(beanName);
+
+    // 从disposableBeans删除
+    DisposableBean disposableBean;
+    synchronized (this.disposableBeans) {
+        disposableBean = (DisposableBean) this.disposableBeans.remove(beanName);
+    }
+    // 调用销毁方法
+    destroyBean(beanName, disposableBean);
+}
+复制代码
+我们来看简单一下这个销毁方法：
+protected void destroyBean(String beanName, @Nullable DisposableBean bean) {
+    // 先把它依赖的bean销毁
+    Set<String> dependencies;
+    synchronized (this.dependentBeanMap) {
+        dependencies = this.dependentBeanMap.remove(beanName);
+    }
+    if (dependencies != null) {
+        for (String dependentBeanName : dependencies) {
+            destroySingleton(dependentBeanName);
+        }
+    }
+
+    if (bean != null) {
+        try {
+            // 执行当前bean的销毁逻辑
+            bean.destroy();
+        }
+        catch (Throwable ex) {
+        }
+    }
+	// 跳过
+}
+复制代码
+依稀记得，我们之前注册进disposableBeans的，是包装成了一个DisposableBeanAdapter实例，那么我们来看一下它的destroy方法：
+public void destroy() {
+    if (!CollectionUtils.isEmpty(this.beanPostProcessors)) {
+        for (DestructionAwareBeanPostProcessor processor : this.beanPostProcessors) {
+            // 这里明显就是去调用InitDestroyAnnotationBeanPostProcessor的逻辑了
+            // 就不再跟了，跟初始化方法调用时一个套路
+            processor.postProcessBeforeDestruction(this.bean, this.beanName);
+        }
+    }
+
+    if (this.invokeDisposableBean) {
+        try {
+            // 调用实现了DisposableBean接口的bean的销毁方法
+            ((DisposableBean) this.bean).destroy();
+        }
+        catch (Throwable ex) {
+        }
+    }
+	// 调用beanDefinition中配置的销毁方法
+    if (this.destroyMethod != null) {
+        invokeCustomDestroyMethod(this.destroyMethod);
+    }
+    else if (this.destroyMethodName != null) {
+        Method methodToInvoke = determineDestroyMethod(this.destroyMethodName);
+        if (methodToInvoke != null) {
+            invokeCustomDestroyMethod(ClassUtils.getInterfaceMethodIfPossible(methodToInvoke));
+        }
+    }
+}
+复制代码
+这个逻辑就很清晰了，而且调用顺序和初始化方法的调用顺序是一样的。具体DisposableBeanAdapter中的这些属性的值是哪来的，感兴趣的同学可以跟一下这个类的构造方法，也是蛮清晰的，这边就不跟了。
+五、总结
+到这里为止，可以说我们的bean的生命周期就讲完了。
+对于bean的生命周期，我们可以分为两个阶段：
+
+初始化阶段：创建bean实例->注入bean依赖->执行bean的初始化方法（注解->接口->beanDefinition配置）
+销毁阶段：销毁当前bean依赖的bean->将当前bean从IOC容器移除->调用当前bean的销毁方法（注解->接口->beanDefinition配置）
+
+我们现在按照bean的scope属性，来对bean的生命周期进行一个归纳总结：
+
+对于单例（singleton）的bean，spring管理其全生命周期，包括初始化阶段和销毁阶段。
+对应多例（prototype）的bean，spring只管理它的初始化阶段；销毁阶段有用户代码处理。
+其他自定义scope，spring管理其初始化阶段，并向调用scope#registerDestructionCallback注册bean的销毁逻辑，但销毁阶段的具体执行由该scope定义。

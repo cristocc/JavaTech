@@ -2,3 +2,27 @@ https://zhuanlan.zhihu.com/p/43369093
 
 HTTP 的特性
 https://hit-alibaba.github.io/interview/basic/network/HTTP.html
+
+
+
+tcp:三次握手
+clinet                   host
+             syn
+         --------->
+         syn + ack
+         <---------
+            ack
+         --------->
+
+
+tcp:四次挥手
+
+clinet                   host
+             fin
+         --------->
+             ack
+         <---------
+             fin
+         <---------
+             ack
+         --------->
