@@ -1,0 +1,27 @@
+4.1单例模式的饿汉式[可用]
+public class Singleton {
+ 
+	private static Singleton instance=new Singleton();
+	private Singleton(){};
+	public static Singleton getInstance(){
+		return instance;
+	}
+}
+4.7内部类[推荐用]
+public class Singleton{
+	private Singleton() {};
+	private static class SingletonHolder{
+		private static Singleton instance=new Singleton();
+	}
+	public static Singleton getInstance(){
+		return SingletonHolder.instance;
+	}
+}
+
+4.8枚举[极推荐使用]
+public enum SingletonEnum {
+	 instance;
+	 private SingletonEnum() {}
+	 public void method(){
+	 }
+}

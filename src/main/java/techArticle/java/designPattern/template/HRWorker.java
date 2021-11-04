@@ -1,0 +1,21 @@
+package techArticle.java.designPattern.template;
+
+/**
+ * Created by crist on 2021/11/4
+ *
+ * @author cc
+ */
+public class HRWorker extends Worker{
+    public HRWorker(String name)
+    {
+        super(name);
+    }
+
+    @Override
+    public void work()
+    {
+        System.out.println(name + "看简历-打电话-接电话");
+    }
+
+
+}
