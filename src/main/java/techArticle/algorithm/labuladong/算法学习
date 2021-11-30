@@ -1,0 +1,2846 @@
+一、数据结构的存储方式
+数据结构的存储方式只有两种：数组（顺序存储）和链表（链式存储）。
+数组由于是紧凑连续存储,可以随机访问，通过索引快速找到对应元素，而且相对节约存储空间。但正因为连续存储，内存空间必须一次性分配够，所以说数组如果要扩容，需要重新分配一块更大的空间，
+再把数据全部复制过去，时间复杂度 O(N)；而且你如果想在数组中间进行插入和删除，每次必须搬移后面的所有数据以保持连续，时间复杂度 O(N)。
+
+链表因为元素不连续，而是靠指针指向下一个元素的位置，所以不存在数组的扩容问题；如果知道某一元素的前驱和后驱，
+操作指针即可删除该元素或者插入新元素，时间复杂度 O(1)。但是正因为存储空间不连续，你无法根据一个索引算出对应元素的地址，
+所以不能随机访问；而且由于每个元素必须存储指向前后元素位置的指针，会消耗相对更多的储存空间。
+
+二、数据结构的基本操作
+对于任何数据结构，其基本操作无非遍历 + 访问，再具体一点就是：增删查改。
+
+数组遍历框架，典型的线性迭代结构：
+void traverse(int[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+        // 迭代访问 arr[i]
+    }
+}
+链表遍历框架，兼具迭代和递归结构：
+/* 基本的单链表节点 */
+class ListNode {
+    int val;
+    ListNode next;
+}
+
+void traverse(ListNode head) {
+    for (ListNode p = head; p != null; p = p.next) {
+        // 迭代访问 p.val
+    }
+}
+
+void traverse(ListNode head) {
+    // 递归访问 head.val
+    traverse(head.next);
+}
+
+二叉树遍历框架，典型的非线性递归遍历结构：
+/* 基本的二叉树节点 */
+class TreeNode {
+    int val;
+    TreeNode left, right;
+}
+
+void traverse(TreeNode root) {
+    traverse(root.left);
+    traverse(root.right);
+}
+
+/* 基本的 N 叉树节点 */
+class TreeNode {
+    int val;
+    TreeNode[] children;
+}
+
+void traverse(TreeNode root) {
+    for (TreeNode child : root.children)
+        traverse(child);
+}
+
+二叉树的题目都是一套这个框架就出来了：
+void traverse(TreeNode root) {
+    // 前序遍历代码位置
+    traverse(root.left);
+    // 中序遍历代码位置
+    traverse(root.right);
+    // 后序遍历代码位置
+}
+
+LeetCode 124 题，难度 Hard，让你求二叉树中最大路径和，主要代码如下：
+int ans = INT_MIN;
+int oneSideMax(TreeNode* root) {
+    if (root == nullptr) return 0;
+    int left = max(0, oneSideMax(root->left));
+    int right = max(0, oneSideMax(root->right));
+    // 后序遍历代码位置
+    ans = max(ans, left + right + root->val);
+    return max(left, right) + root->val;
+}
+
+LeetCode 105 题，难度 Medium，让你根据前序遍历和中序遍历的结果还原一棵二叉树，很经典的问题吧，主要代码如下：
+TreeNode buildTree(int[] preorder, int preStart, int preEnd,
+    int[] inorder, int inStart, int inEnd, Map<Integer, Integer> inMap) {
+
+    if(preStart > preEnd || inStart > inEnd) return null;
+
+    TreeNode root = new TreeNode(preorder[preStart]);
+    int inRoot = inMap.get(root.val);
+    int numsLeft = inRoot - inStart;
+
+    root.left = buildTree(preorder, preStart + 1, preStart + numsLeft,
+                          inorder, inStart, inRoot - 1, inMap);
+    root.right = buildTree(preorder, preStart + numsLeft + 1, preEnd,
+                          inorder, inRoot + 1, inEnd, inMap);
+    return root;
+}
+
+LeetCode 99 题，难度 Hard，恢复一棵 BST，主要代码如下：
+void traverse(TreeNode node) {
+    if (node == null) return;
+    traverse(node.left);
+    if (node.val < prev.val) {
+        s = (s == null) ? prev : s;
+        t = node;
+    }
+    prev = node;
+    traverse(node.right);
+}
+
+动态规划详解说过凑零钱问题，暴力解法就是遍历一棵 N 叉树：
+int dp(int[] coins, int amount) {
+    // base case
+    if (amount == 0) return 0;
+    if (amount < 0) return -1;
+
+    int res = Integer.MAX_VALUE;
+    for (int coin : coins) {
+        int subProblem = dp(coins, amount - coin);
+        // 子问题无解则跳过
+        if (subProblem == -1) continue;
+        // 在子问题中选择最优解，然后加一
+        res = Math.min(res, subProblem + 1);
+    }
+    return res == Integer.MAX_VALUE ? -1 : res;
+}
+
+全排列算法的主要代码如下：
+void backtrack(int[] nums, LinkedList<Integer> track) {
+    if (track.size() == nums.length) {
+        res.add(new LinkedList(track));
+        return;
+    }
+
+    for (int i = 0; i < nums.length; i++) {
+        if (track.contains(nums[i]))
+            continue;
+        track.add(nums[i]);
+        // 进入下一层决策树
+        backtrack(nums, track);
+        track.removeLast();
+    }
+
+/* 提取出 N 叉树遍历框架 */
+void backtrack(int[] nums, LinkedList<Integer> track) {
+    for (int i = 0; i < nums.length; i++) {
+        backtrack(nums, track);
+}
+
+四、总结几句
+数据结构的基本存储方式就是链式和顺序两种，基本操作就是增删查改，遍历方式无非迭代和递归。
+刷算法题建议从「树」分类开始刷，结合框架思维，把这几十道题刷完，对于树结构的理解应该就到位了。这时候去看回溯、动规、分治等算法专题，对思路的理解可能会更加深刻一些。
+
+
+动态规划解题套路框架
+带备忘录的递归解法
+int fib(int N) {
+    // 备忘录全初始化为 0
+    int[] memo = new int[N + 1];
+    // 进行带备忘录的递归
+    return helper(memo, N);
+}
+
+int helper(int[] memo, int n) {
+    // base case
+    if (n == 0 || n == 1) return n;
+    // 已经计算过，不用再计算了
+    if (memo[n] != 0) return memo[n];
+    memo[n] = helper(memo, n - 1) + helper(memo, n - 2);
+    return memo[n];
+}
+
+dp 数组的迭代解法
+int fib(int N) {
+    if (N == 0)
+        return 0;
+    int[] dp = new int[N + 1];
+    // base case
+    dp[0] = 0; dp[1] = 1;
+    // 状态转移
+    for (int i = 2; i <= N; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    return dp[N];
+}
+
+二、凑零钱问题
+先看下题目：给你 k 种面值的硬币，面值分别为 c1, c2 ... ck，每种硬币的数量无限，再给一个总金额 amount，问你最少需要几枚硬币凑出这个金额，如果不可能凑出，算法返回 -1 。算法的函数签名如下：
+// coins 中是可选硬币面值，amount 是目标金额
+int coinChange(int[] coins, int amount);
+
+int coinChange(int[] coins, int amount) {
+    // 题目要求的最终结果是 dp(amount)
+    return dp(coins, amount)
+}
+
+int dp(int[] coins, int amount) {
+    // base case
+    if (amount == 0) return 0;
+    if (amount < 0) return -1;
+
+    int res = Integer.MAX_VALUE;
+    for (int coin : coins) {
+        // 计算子问题的结果
+        int subProblem = dp(coins, amount - coin);
+        // 子问题无解则跳过
+        if (subProblem == -1) continue;
+        // 在子问题中选择最优解，然后加一
+        res = Math.min(res, subProblem + 1);
+    }
+
+    return res == Integer.MAX_VALUE ? -1 : res;
+}
+
+带备忘录的递归
+
+类似之前斐波那契数列的例子，只需要稍加修改，就可以通过备忘录消除子问题：
+
+int[] memo;
+
+int coinChange(int[] coins, int amount) {
+    memo = new int[amount + 1];
+    // dp 数组全都初始化为特殊值
+    Arrays.fill(memo, -666);
+
+    return dp(coins, amount);
+}
+
+int dp(int[] coins, int amount) {
+    if (amount == 0) return 0;
+    if (amount < 0) return -1;
+    // 查备忘录，防止重复计算
+    if (memo[amount] != -666)
+        return memo[amount];
+
+    int res = Integer.MAX_VALUE;
+    for (int coin : coins) {
+        // 计算子问题的结果
+        int subProblem = dp(coins, amount - coin);
+        // 子问题无解则跳过
+        if (subProblem == -1) continue;
+        // 在子问题中选择最优解，然后加一
+        res = Math.min(res, subProblem + 1);
+    }
+    // 把计算结果存入备忘录
+    memo[amount] = (res == Integer.MAX_VALUE) ? -1 : res;
+    return memo[amount];
+}
+
+回溯算法解题套路框架
+其实回溯算法其实就是我们常说的 DFS 算法，本质上就是一种暴力穷举算法。
+1、路径：也就是已经做出的选择。
+2、选择列表：也就是你当前可以做的选择。
+3、结束条件：也就是到达决策树底层，无法再做选择的条件。
+代码方面，回溯算法的框架：
+result = []
+def backtrack(路径, 选择列表):
+    if 满足结束条件:
+        result.add(路径)
+        return
+
+    for 选择 in 选择列表:
+        做选择
+        backtrack(路径, 选择列表)
+        撤销选择
+
+List<List<Integer>> res = new LinkedList<>();
+
+/* 主函数，输入一组不重复的数字，返回它们的全排列 */
+List<List<Integer>> permute(int[] nums) {
+    // 记录「路径」
+    LinkedList<Integer> track = new LinkedList<>();
+    backtrack(nums, track);
+    return res;
+}
+
+// 路径：记录在 track 中
+// 选择列表：nums 中不存在于 track 的那些元素
+// 结束条件：nums 中的元素全都在 track 中出现
+void backtrack(int[] nums, LinkedList<Integer> track) {
+    // 触发结束条件
+    if (track.size() == nums.length) {
+        res.add(new LinkedList(track));
+        return;
+    }
+
+    for (int i = 0; i < nums.length; i++) {
+        // 排除不合法的选择
+        if (track.contains(nums[i]))
+            continue;
+        // 做选择
+        track.add(nums[i]);
+        // 进入下一层决策树
+        backtrack(nums, track);
+        // 取消选择
+        track.removeLast();
+    }
+}
+
+二、N 皇后问题
+这个问题很经典了，简单解释一下：给你一个 N×N 的棋盘，让你放置 N 个皇后，使得它们不能互相攻击。
+vector<vector<string>> res;
+
+/* 输入棋盘边长 n，返回所有合法的放置 */
+vector<vector<string>> solveNQueens(int n) {
+    // '.' 表示空，'Q' 表示皇后，初始化空棋盘。
+    vector<string> board(n, string(n, '.'));
+    backtrack(board, 0);
+    return res;
+}
+
+// 路径：board 中小于 row 的那些行都已经成功放置了皇后
+// 选择列表：第 row 行的所有列都是放置皇后的选择
+// 结束条件：row 超过 board 的最后一行
+void backtrack(vector<string>& board, int row) {
+    // 触发结束条件
+    if (row == board.size()) {
+        res.push_back(board);
+        return;
+    }
+
+    int n = board[row].size();
+    for (int col = 0; col < n; col++) {
+        // 排除不合法选择
+        if (!isValid(board, row, col))
+            continue;
+        // 做选择
+        board[row][col] = 'Q';
+        // 进入下一行决策
+        backtrack(board, row + 1);
+        // 撤销选择
+        board[row][col] = '.';
+    }
+}
+/* 是否可以在 board[row][col] 放置皇后？ */
+bool isValid(vector<string>& board, int row, int col) {
+    int n = board.size();
+    // 检查列是否有皇后互相冲突
+    for (int i = 0; i < n; i++) {
+        if (board[i][col] == 'Q')
+            return false;
+    }
+    // 检查右上方是否有皇后互相冲突
+    for (int i = row - 1, j = col + 1;
+            i >= 0 && j < n; i--, j++) {
+        if (board[i][j] == 'Q')
+            return false;
+    }
+    // 检查左上方是否有皇后互相冲突
+    for (int i = row - 1, j = col - 1;
+            i >= 0 && j >= 0; i--, j--) {
+        if (board[i][j] == 'Q')
+            return false;
+    }
+    return true;
+}
+
+BFS 算法解题套路框架
+// 计算从起点 start 到终点 target 的最近距离
+int BFS(Node start, Node target) {
+    Queue<Node> q; // 核心数据结构
+    Set<Node> visited; // 避免走回头路
+
+    q.offer(start); // 将起点加入队列
+    visited.add(start);
+    int step = 0; // 记录扩散的步数
+
+    while (q not empty) {
+        int sz = q.size();
+        /* 将当前队列中的所有节点向四周扩散 */
+        for (int i = 0; i < sz; i++) {
+            Node cur = q.poll();
+            /* 划重点：这里判断是否到达终点 */
+            if (cur is target)
+                return step;
+            /* 将 cur 的相邻节点加入队列 */
+            for (Node x : cur.adj())
+                if (x not in visited) {
+                    q.offer(x);
+                    visited.add(x);
+                }
+        }
+        /* 划重点：更新步数在这里 */
+        step++;
+    }
+}
+
+二叉树的最小高度
+先来个简单的问题实践一下 BFS 框架吧，判断一棵二叉树的最小高度，这也是 LeetCode 第 111 题，看一下题目：
+int minDepth(TreeNode root) {
+    if (root == null) return 0;
+    Queue<TreeNode> q = new LinkedList<>();
+    q.offer(root);
+    // root 本身就是一层，depth 初始化为 1
+    int depth = 1;
+
+    while (!q.isEmpty()) {
+        int sz = q.size();
+        /* 将当前队列中的所有节点向四周扩散 */
+        for (int i = 0; i < sz; i++) {
+            TreeNode cur = q.poll();
+            /* 判断是否到达终点 */
+            if (cur.left == null && cur.right == null)
+                return depth;
+            /* 将 cur 的相邻节点加入队列 */
+            if (cur.left != null)
+                q.offer(cur.left);
+            if (cur.right != null)
+                q.offer(cur.right);
+        }
+        /* 这里增加步数 */
+        depth++;
+    }
+    return depth;
+}
+
+合并两个有序链表
+ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    // 虚拟头结点
+    ListNode dummy = new ListNode(-1), p = dummy;
+    ListNode p1 = l1, p2 = l2;
+    while (p1 != null && p2 != null) {
+        // 比较 p1 和 p2 两个指针
+        // 将值较小的的节点接到 p 指针
+        if (p1.val > p2.val) {
+            p.next = p2;
+            p2 = p2.next;
+        } else {
+            p.next = p1;
+            p1 = p1.next;
+        }
+        // p 指针不断前进
+        p = p.next;
+    }
+    if (p1 != null) {
+        p.next = p1;
+    }
+    if (p2 != null) {
+        p.next = p2;
+    }
+    return dummy.next;
+}
+合并 k 个有序链表
+ListNode mergeKLists(ListNode[] lists) {
+    if (lists.length == 0) return null;
+    // 虚拟头结点
+    ListNode dummy = new ListNode(-1);
+    ListNode p = dummy;
+    // 优先级队列，最小堆
+    PriorityQueue<ListNode> pq = new PriorityQueue<>(
+        lists.length, (a, b)->(a.val - b.val));
+    // 将 k 个链表的头结点加入最小堆
+    for (ListNode head : lists) {
+        if (head != null)
+            pq.add(head);
+    }
+
+    while (!pq.isEmpty()) {
+        // 获取最小节点，接到结果链表中
+        ListNode node = pq.poll();
+        p.next = node;
+        if (node.next != null) {
+            pq.add(node.next);
+        }
+        // p 指针不断前进
+        p = p.next;
+    }
+    return dummy.next;
+}
+
+https://labuladong.gitee.io/algo/1/6/#单链表的倒数第-k-个节点
+// 返回链表的倒数第 k 个节点
+ListNode findFromEnd(ListNode head, int k) {
+    ListNode p1 = head;
+    // p1 先走 k 步
+    for (int i = 0; i < k; i++) {
+        p1 = p1.next;
+    }
+    ListNode p2 = head;
+    // p1 和 p2 同时走 n - k 步
+    while (p1 != null) {
+        p2 = p2.next;
+        p1 = p1.next;
+    }
+    // p2 现在指向第 n - k 个节点
+    return p2;
+}
+
+https://labuladong.gitee.io/algo/1/6/#单链表的中点
+ListNode middleNode(ListNode head) {
+    // 快慢指针初始化指向 head
+    ListNode slow = head, fast = head;
+    // 快指针走到末尾时停止
+    while (fast != null && fast.next != null) {
+        // 慢指针走一步，快指针走两步
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    // 慢指针指向中点
+    return slow;
+}
+
+https://labuladong.gitee.io/algo/1/6/#判断链表是否包含环
+boolean hasCycle(ListNode head) {
+    // 快慢指针初始化指向 head
+    ListNode slow = head, fast = head;
+    // 快指针走到末尾时停止
+    while (fast != null && fast.next != null) {
+        // 慢指针走一步，快指针走两步
+        slow = slow.next;
+        fast = fast.next.next;
+        // 快慢指针相遇，说明含有环
+        if (slow == fast) {
+            return true;
+        }
+    }
+    // 不包含环
+    return false;
+}
+
+https://labuladong.gitee.io/algo/1/6/#两个链表是否相交
+ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+    // p1 指向 A 链表头结点，p2 指向 B 链表头结点
+    ListNode p1 = headA, p2 = headB;
+    while (p1 != p2) {
+        // p1 走一步，如果走到 A 链表末尾，转到 B 链表
+        if (p1 == null){
+         p1 = headB;
+        }
+        else {
+                   p1 = p1.next;
+        }
+        // p2 走一步，如果走到 B 链表末尾，转到 A 链表
+        if (p2 == null){
+         p2 = headA;
+        }
+
+    }
+    return p1;
+}
+
+https://labuladong.gitee.io/algo/1/8/#岛屿数量
+// 主函数，计算岛屿数量
+int numIslands(char[][] grid) {
+    int res = 0;
+    int m = grid.length, n = grid[0].length;
+    // 遍历 grid
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] == '1') {
+                // 每发现一个岛屿，岛屿数量加一
+                res++;
+                // 然后使用 DFS 将岛屿淹了
+                dfs(grid, i, j);
+            }
+        }
+    }
+    return res;
+}
+
+// 从 (i, j) 开始，将与之相邻的陆地都变成海水
+void dfs(char[][] grid, int i, int j) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n) {
+        // 超出索引边界
+        return;
+    }
+    if (grid[i][j] == '0') {
+        // 已经是海水了
+        return;
+    }
+    // 将 (i, j) 变成海水
+    grid[i][j] = '0';
+    // 淹没上下左右的陆地
+    dfs(grid, i + 1, j);
+    dfs(grid, i, j + 1);
+    dfs(grid, i - 1, j);
+    dfs(grid, i, j - 1);
+}
+
+// 二维矩阵遍历框架
+void dfs(int[][] grid, int i, int j, boolean[] visited) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n) {
+        // 超出索引边界
+        return;
+    }
+    if (visited[i][j]) {
+        // 已遍历过 (i, j)
+        return;
+    }
+    // 进入节点 (i, j)
+    visited[i][j] = true;
+    dfs(grid, i - 1, j); // 上
+    dfs(grid, i + 1, j); // 下
+    dfs(grid, i, j - 1); // 左
+    dfs(grid, i, j + 1); // 右
+}
+
+https://labuladong.gitee.io/algo/1/8/#封闭岛屿的数量
+// 主函数：计算封闭岛屿的数量
+int closedIsland(int[][] grid) {
+    int m = grid.length, n = grid[0].length;
+    for (int j = 0; j < n; j++) {
+        // 把靠上边的岛屿淹掉
+        dfs(grid, 0, j);
+        // 把靠下边的岛屿淹掉
+        dfs(grid, m - 1, j);
+    }
+    for (int i = 0; i < m; i++) {
+        // 把靠左边的岛屿淹掉
+        dfs(grid, i, 0);
+        // 把靠右边的岛屿淹掉
+        dfs(grid, i, n - 1);
+    }
+    // 遍历 grid，剩下的岛屿都是封闭岛屿
+    int res = 0;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] == 0) {
+                res++;
+                dfs(grid, i, j);
+            }
+        }
+    }
+    return res;
+}
+
+// 从 (i, j) 开始，将与之相邻的陆地都变成海水
+void dfs(int[][] grid, int i, int j) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n) {
+        return;
+    }
+    if (grid[i][j] == 1) {
+        // 已经是海水了
+        return;
+    }
+    // 将 (i, j) 变成海水
+    grid[i][j] = 1;
+    // 淹没上下左右的陆地
+    dfs(grid, i + 1, j);
+    dfs(grid, i, j + 1);
+    dfs(grid, i - 1, j);
+    dfs(grid, i, j - 1);
+}
+
+https://labuladong.gitee.io/algo/1/8/#岛屿的最大面积
+int maxAreaOfIsland(int[][] grid) {
+    // 记录岛屿的最大面积
+    int res = 0;
+    int m = grid.length, n = grid[0].length;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] == 1) {
+                // 淹没岛屿，并更新最大岛屿面积
+                res = Math.max(res, dfs(grid, i, j));
+            }
+        }
+    }
+    return res;
+}
+
+// 淹没与 (i, j) 相邻的陆地，并返回淹没的陆地面积
+int dfs(int[][] grid, int i, int j) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n) {
+        // 超出索引边界
+        return 0;
+    }
+    if (grid[i][j] == 0) {
+        // 已经是海水了
+        return 0;
+    }
+    // 将 (i, j) 变成海水
+    grid[i][j] = 0;
+
+    return dfs(grid, i + 1, j)
+         + dfs(grid, i, j + 1)
+         + dfs(grid, i - 1, j)
+         + dfs(grid, i, j - 1) + 1;
+}
+
+https://labuladong.gitee.io/algo/1/8/#子岛屿数量
+int countSubIslands(int[][] grid1, int[][] grid2) {
+    int m = grid1.length, n = grid1[0].length;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid1[i][j] == 0 && grid2[i][j] == 1) {
+                // 这个岛屿肯定不是子岛，淹掉
+                dfs(grid2, i, j);
+            }
+        }
+    }
+    // 现在 grid2 中剩下的岛屿都是子岛，计算岛屿数量
+    int res = 0;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid2[i][j] == 1) {
+                res++;
+                dfs(grid2, i, j);
+            }
+        }
+    }
+    return res;
+}
+
+// 从 (i, j) 开始，将与之相邻的陆地都变成海水
+void dfs(int[][] grid, int i, int j) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n) {
+        return;
+    }
+    if (grid[i][j] == 0) {
+        return;
+    }
+
+    grid[i][j] = 0;
+    dfs(grid, i + 1, j);
+    dfs(grid, i, j + 1);
+    dfs(grid, i - 1, j);
+    dfs(grid, i, j - 1);
+}
+
+https://labuladong.gitee.io/algo/1/8/#不同的岛屿数量
+void dfs(int[][] grid, int i, int j, StringBuilder sb, int dir) {
+    int m = grid.length, n = grid[0].length;
+    if (i < 0 || j < 0 || i >= m || j >= n
+        || grid[i][j] == 0) {
+        return;
+    }
+    // 前序遍历位置：进入 (i, j)
+    grid[i][j] = 0;
+    sb.append(dir).append(',');
+
+    dfs(grid, i - 1, j, sb, 1); // 上
+    dfs(grid, i + 1, j, sb, 2); // 下
+    dfs(grid, i, j - 1, sb, 3); // 左
+    dfs(grid, i, j + 1, sb, 4); // 右
+
+    // 后序遍历位置：离开 (i, j)
+    sb.append(-dir).append(',');
+}
+int numDistinctIslands(int[][] grid) {
+    int m = grid.length, n = grid[0].length;
+    // 记录所有岛屿的序列化结果
+    HashSet<String> islands = new HashSet<>();
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] == 1) {
+                // 淹掉这个岛屿，同时存储岛屿的序列化结果
+                StringBuilder sb = new StringBuilder();
+                // 初始的方向可以随便写，不影响正确性
+                dfs(grid, i, j, sb, 666);
+                islands.add(sb.toString());
+            }
+        }
+    }
+    // 不相同的岛屿数量
+    return islands.size();
+}
+
+https://labuladong.gitee.io/algo/1/9/#零二分查找框架
+int binarySearch(int[] nums, int target) {
+    int left = 0, right = ...;
+
+    while(...) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+            ...
+        } else if (nums[mid] < target) {
+            left = ...
+        } else if (nums[mid] > target) {
+            right = ...
+        }
+    }
+    return ...;
+}
+
+https://labuladong.gitee.io/algo/1/9/#一寻找一个数基本的二分搜索
+int binarySearch(int[] nums, int target) {
+    int left = 0;
+    int right = nums.length - 1; // 注意
+
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if(nums[mid] == target)
+            return mid;
+        else if (nums[mid] < target)
+            left = mid + 1; // 注意
+        else if (nums[mid] > target)
+            right = mid - 1; // 注意
+    }
+    return -1;
+}
+
+https://labuladong.gitee.io/algo/1/9/#二寻找左侧边界的二分搜索
+int left_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    // 搜索区间为 [left, right]
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            // 搜索区间变为 [mid+1, right]
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            // 搜索区间变为 [left, mid-1]
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 收缩右侧边界
+            right = mid - 1;
+        }
+    }
+    // 检查出界情况
+    if (left >= nums.length || nums[left] != target)
+        return -1;
+    return left;
+}
+
+https://labuladong.gitee.io/algo/1/9/#三寻找右侧边界的二分查找
+int right_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 这里改成收缩左侧边界即可
+            left = mid + 1;
+        }
+    }
+    // 这里改为检查 right 越界的情况，见下图
+    if (right < 0 || nums[right] != target)
+        return -1;
+    return right;
+}
+
+/* 滑动窗口算法框架 */
+void slidingWindow(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    while (right < s.size()) {
+        // c 是将移入窗口的字符
+        char c = s[right];
+        // 右移窗口
+        right++;
+        // 进行窗口内数据的一系列更新
+        ...
+
+        /*** debug 输出的位置 ***/
+        printf("window: [%d, %d)\n", left, right);
+        /********************/
+
+        // 判断左侧窗口是否要收缩
+        while (window needs shrink) {
+            // d 是将移出窗口的字符
+            char d = s[left];
+            // 左移窗口
+            left++;
+            // 进行窗口内数据的一系列更新
+            ...
+        }
+    }
+}
+
+https://labuladong.gitee.io/algo/1/10/#一最小覆盖子串
+string minWindow(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    // 记录最小覆盖子串的起始索引及长度
+    int start = 0, len = INT_MAX;
+    while (right < s.size()) {
+        // c 是将移入窗口的字符
+        char c = s[right];
+        // 右移窗口
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+
+        // 判断左侧窗口是否要收缩
+        while (valid == need.size()) {
+            // 在这里更新最小覆盖子串
+            if (right - left < len) {
+                start = left;
+                len = right - left;
+            }
+            // d 是将移出窗口的字符
+            char d = s[left];
+            // 左移窗口
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    // 返回最小覆盖子串
+    return len == INT_MAX ?
+        "" : s.substr(start, len);
+}
+
+https://labuladong.gitee.io/algo/1/10/#二字符串排列
+// 判断 s 中是否存在 t 的排列
+bool checkInclusion(string t, string s) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+
+        // 判断左侧窗口是否要收缩
+        while (right - left >= t.size()) {
+            // 在这里判断是否找到了合法的子串
+            if (valid == need.size())
+                return true;
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    // 未找到符合条件的子串
+    return false;
+}
+
+https://labuladong.gitee.io/algo/1/10/#三找所有字母异位词
+vector<int> findAnagrams(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    vector<int> res; // 记录结果
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+        // 判断左侧窗口是否要收缩
+        while (right - left >= t.size()) {
+            // 当窗口符合条件时，把起始索引加入 res
+            if (valid == need.size())
+                res.push_back(left);
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    return res;
+}
+
+https://labuladong.gitee.io/algo/1/10/#四最长无重复子串
+int lengthOfLongestSubstring(string s) {
+    unordered_map<char, int> window;
+
+    int left = 0, right = 0;
+    int res = 0; // 记录结果
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        window[c]++;
+        // 判断左侧窗口是否要收缩
+        while (window[c] > 1) {
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            window[d]--;
+        }
+        // 在这里更新答案
+        res = max(res, right - left);
+    }
+    return res;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#合并两个有序链表
+ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    // 虚拟头结点
+    ListNode dummy = new ListNode(-1), p = dummy;
+    ListNode p1 = l1, p2 = l2;
+    while (p1 != null && p2 != null) {
+        // 比较 p1 和 p2 两个指针
+        // 将值较小的的节点接到 p 指针
+        if (p1.val > p2.val) {
+            p.next = p2;
+            p2 = p2.next;
+        } else {
+            p.next = p1;
+            p1 = p1.next;
+        }
+        // p 指针不断前进
+        p = p.next;
+    }
+    if (p1 != null) {
+        p.next = p1;
+    }
+    if (p2 != null) {
+        p.next = p2;
+    }
+    return dummy.next;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#合并-k-个有序链表
+ListNode mergeKLists(ListNode[] lists) {
+    if (lists.length == 0) return null;
+    // 虚拟头结点
+    ListNode dummy = new ListNode(-1);
+    ListNode p = dummy;
+    // 优先级队列，最小堆
+    PriorityQueue<ListNode> pq = new PriorityQueue<>(
+        lists.length, (a, b)->(a.val - b.val));
+    // 将 k 个链表的头结点加入最小堆
+    for (ListNode head : lists) {
+        if (head != null)
+            pq.add(head);
+    }
+
+    while (!pq.isEmpty()) {
+        // 获取最小节点，接到结果链表中
+        ListNode node = pq.poll();
+        p.next = node;
+        if (node.next != null) {
+            pq.add(node.next);
+        }
+        // p 指针不断前进
+        p = p.next;
+    }
+    return dummy.next;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#单链表的倒数第-k-个节点
+// 返回链表的倒数第 k 个节点
+ListNode findFromEnd(ListNode head, int k) {
+    ListNode p1 = head;
+    // p1 先走 k 步
+    for (int i = 0; i < k; i++) {
+        p1 = p1.next;
+    }
+    ListNode p2 = head;
+    // p1 和 p2 同时走 n - k 步
+    while (p1 != null) {
+        p2 = p2.next;
+        p1 = p1.next;
+    }
+    // p2 现在指向第 n - k 个节点
+    return p2;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#单链表的中点
+ListNode middleNode(ListNode head) {
+    // 快慢指针初始化指向 head
+    ListNode slow = head, fast = head;
+    // 快指针走到末尾时停止
+    while (fast != null && fast.next != null) {
+        // 慢指针走一步，快指针走两步
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    // 慢指针指向中点
+    return slow;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#判断链表是否包含环
+boolean hasCycle(ListNode head) {
+    // 快慢指针初始化指向 head
+    ListNode slow = head, fast = head;
+    // 快指针走到末尾时停止
+    while (fast != null && fast.next != null) {
+        // 慢指针走一步，快指针走两步
+        slow = slow.next;
+        fast = fast.next.next;
+        // 快慢指针相遇，说明含有环
+        if (slow == fast) {
+            return true;
+        }
+    }
+    // 不包含环
+    return false;
+}
+当然，这个问题还有进阶版：如果链表中含有环，如何计算这个环的起点？
+ListNode detectCycle(ListNode head) {
+    ListNode fast, slow;
+    fast = slow = head;
+    while (fast != null && fast.next != null) {
+        fast = fast.next.next;
+        slow = slow.next;
+        if (fast == slow) break;
+    }
+    // 上面的代码类似 hasCycle 函数
+    if (fast == null || fast.next == null) {
+        // fast 遇到空指针说明没有环
+        return null;
+    }
+
+    // 重新指向头结点
+    slow = head;
+    // 快慢指针同步前进，相交点就是环起点
+    while (slow != fast) {
+        fast = fast.next;
+        slow = slow.next;
+    }
+    return slow;
+}
+
+https://labuladong.gitee.io/algo/2/17/16/#两个链表是否相交
+ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+    // p1 指向 A 链表头结点，p2 指向 B 链表头结点
+    ListNode p1 = headA, p2 = headB;
+    while (p1 != p2) {
+        // p1 走一步，如果走到 A 链表末尾，转到 B 链表
+        if (p1 == null) p1 = headB;
+        else            p1 = p1.next;
+        // p2 走一步，如果走到 B 链表末尾，转到 A 链表
+        if (p2 == null) p2 = headA;
+        else            p2 = p2.next;
+    }
+    return p1;
+}
+
+https://labuladong.gitee.io/algo/2/17/17/#一递归反转整个链表
+ListNode reverse(ListNode head) {
+    if (head.next == null) return head;
+    ListNode last = reverse(head.next);
+    head.next.next = head;
+    head.next = null;
+    return last;
+}
+
+https://labuladong.gitee.io/algo/2/17/17/#二反转链表前-n-个节点
+ListNode successor = null; // 后驱节点
+
+// 反转以 head 为起点的 n 个节点，返回新的头结点
+ListNode reverseN(ListNode head, int n) {
+    if (n == 1) {
+        // 记录第 n + 1 个节点
+        successor = head.next;
+        return head;
+    }
+    // 以 head.next 为起点，需要反转前 n - 1 个节点
+    ListNode last = reverseN(head.next, n - 1);
+    head.next.next = head;
+    // 让反转之后的 head 节点和后面的节点连起来
+    head.next = successor;
+    return last;
+}
+
+https://labuladong.gitee.io/algo/2/17/17/#三反转链表的一部分
+ListNode reverseBetween(ListNode head, int m, int n) {
+    // base case
+    if (m == 1) {
+        return reverseN(head, n);
+    }
+    // 前进到反转的起点触发 base case
+    head.next = reverseBetween(head.next, m - 1, n - 1);
+    return head;
+}
+递归的思想相对迭代思想，稍微有点难以理解，处理的技巧是：不要跳进递归，而是利用明确的定义来实现算法逻辑。
+
+// 反转以 a 为头结点的链表
+ListNode reverse(ListNode a) {
+    ListNode pre, cur, nxt;
+    pre = null; cur = a; nxt = a;
+    while (cur != null) {
+        nxt = cur.next;
+        // 逐个结点反转
+        cur.next = pre;
+        // 更新指针位置
+        pre = cur;
+        cur = nxt;
+    }
+    // 返回反转后的头结点
+    return pre;
+}
+
+https://labuladong.gitee.io/algo/2/17/19/#一判断回文单链表
+// 左侧指针
+ListNode left;
+boolean isPalindrome(ListNode head) {
+    left = head;
+    return traverse(head);
+}
+boolean traverse(ListNode right) {
+    if (right == null) return true;
+    boolean res = traverse(right.next);
+    // 后序遍历代码
+    res = res && (right.val == left.val);
+    left = left.next;
+    return res;
+}
+
+boolean isPalindrome(ListNode head) {
+    ListNode slow, fast;
+    slow = fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+
+    if (fast != null)
+        slow = slow.next;
+
+    ListNode left = head;
+    ListNode right = reverse(slow);
+    while (right != null) {
+        if (left.val != right.val)
+            return false;
+        left = left.next;
+        right = right.next;
+    }
+
+    return true;
+}
+
+ListNode reverse(ListNode head) {
+    ListNode pre = null, cur = head;
+    while (cur != null) {
+        ListNode next = cur.next;
+        cur.next = pre;
+        pre = cur;
+        cur = next;
+    }
+    return pre;
+}
+
+/** 反转区间 [a, b) 的元素，注意是左闭右开 */
+ListNode reverse(ListNode a, ListNode b) {
+    ListNode pre, cur, nxt;
+    pre = null; cur = a; nxt = a;
+    // while 终止的条件改一下就行了
+    while (cur != b) {
+        nxt = cur.next;
+        cur.next = pre;
+        pre = cur;
+        cur = nxt;
+    }
+    // 返回反转后的头结点
+    return pre;
+}
+
+https://labuladong.gitee.io/algo/2/17/19/#一判断回文单链表
+// 左侧指针
+ListNode left;
+
+boolean isPalindrome(ListNode head) {
+    left = head;
+    return traverse(head);
+}
+
+boolean traverse(ListNode right) {
+    if (right == null) return true;
+    boolean res = traverse(right.next);
+    // 后序遍历代码
+    res = res && (right.val == left.val);
+    left = left.next;
+    return res;
+}
+
+https://labuladong.gitee.io/algo/2/18/21/#一二叉树的重要性
+
+https://labuladong.gitee.io/algo/2/18/21/#二写递归算法的秘诀
+写递归算法的关键是要明确函数的「定义」是什么，然后相信这个定义，利用这个定义推导最终结果，绝不要跳入递归的细节。
+// 定义：count(root) 返回以 root 为根的树有多少节点
+int count(TreeNode root) {
+    // base case
+    if (root == null) return 0;
+    // 自己加上子树的节点数就是整棵树的节点数
+    return 1 + count(root.left) + count(root.right);
+}
+
+// 将整棵树的节点翻转
+TreeNode invertTree(TreeNode root) {
+    // base case
+    if (root == null) {
+        return null;
+    }
+
+    /**** 前序遍历位置 ****/
+    // root 节点需要交换它的左右子节点
+    TreeNode tmp = root.left;
+    root.left = root.right;
+    root.right = tmp;
+
+    // 让左右子节点继续翻转它们的子节点
+    invertTree(root.left);
+    invertTree(root.right);
+
+    return root;
+}
+
+// 定义：将以 root 为根的树拉平为链表
+void flatten(TreeNode root) {
+    // base case
+    if (root == null) return;
+
+    flatten(root.left);
+    flatten(root.right);
+
+    /**** 后序遍历位置 ****/
+    // 1、左右子树已经被拉平成一条链表
+    TreeNode left = root.left;
+    TreeNode right = root.right;
+
+    // 2、将左子树作为右子树
+    root.left = null;
+    root.right = left;
+
+    // 3、将原先的右子树接到当前右子树的末端
+    TreeNode p = root;
+    while (p.right != null) {
+        p = p.right;
+    }
+    p.right = right;
+}
+
+https://labuladong.gitee.io/algo/2/18/22/#构造最大二叉树
+/* 主函数 */
+TreeNode constructMaximumBinaryTree(int[] nums) {
+    return build(nums, 0, nums.length - 1);
+}
+
+/* 将 nums[lo..hi] 构造成符合条件的树，返回根节点 */
+TreeNode build(int[] nums, int lo, int hi) {
+    // base case
+    if (lo > hi) {
+        return null;
+    }
+    // 找到数组中的最大值和对应的索引
+    int index = -1, maxVal = Integer.MIN_VALUE;
+    for (int i = lo; i <= hi; i++) {
+        if (maxVal < nums[i]) {
+            index = i;
+            maxVal = nums[i];
+        }
+    }
+    TreeNode root = new TreeNode(maxVal);
+    // 递归调用构造左右子树
+    root.left = build(nums, lo, index - 1);
+    root.right = build(nums, index + 1, hi);
+    return root;
+}
+
+对于任意一颗树而言，前序遍历的形式总是
+[ 根节点, [左子树的前序遍历结果], [右子树的前序遍历结果] ]
+
+即根节点总是前序遍历中的第一个节点。而中序遍历的形式总是
+[ [左子树的中序遍历结果], 根节点, [右子树的中序遍历结果] ]
+
+只要我们在中序遍历中定位到根节点，那么我们就可以分别知道左子树和右子树中的节点数目。由于同一颗子树的前序遍历和中序遍历的长度显然是相同的，
+因此我们就可以对应到前序遍历的结果中，对上述形式中的所有左右括号进行定位。
+
+这样以来，我们就知道了左子树的前序遍历和中序遍历结果，以及右子树的前序遍历和中序遍历结果，我们就可以递归地对构造出左子树和右子树，再将这两颗子树接到根节点的左右位置。
+
+细节
+
+在中序遍历中对根节点进行定位时，一种简单的方法是直接扫描整个中序遍历的结果并找出根节点，但这样做的时间复杂度较高。我们可以考虑使用哈希表来帮助我们快速地定位根节点。
+对于哈希映射中的每个键值对，键表示一个元素（节点的值），值表示其在中序遍历中的出现位置。在构造二叉树的过程之前，我们可以对中序遍历的列表进行一遍扫描，就可以构造出这个哈希映射。
+在此后构造二叉树的过程中，我们就只需要 O(1)O(1) 的时间对根节点进行定位了。
+
+下面的代码给出了详细的注释。
+
+class Solution {
+    private Map<Integer, Integer> indexMap;
+
+    public TreeNode myBuildTree(int[] preorder, int[] inorder, int preorder_left, int preorder_right, int inorder_left, int inorder_right) {
+        if (preorder_left > preorder_right) {
+            return null;
+        }
+
+        // 前序遍历中的第一个节点就是根节点
+        int preorder_root = preorder_left;
+        // 在中序遍历中定位根节点
+        int inorder_root = indexMap.get(preorder[preorder_root]);
+
+        // 先把根节点建立出来
+        TreeNode root = new TreeNode(preorder[preorder_root]);
+        // 得到左子树中的节点数目
+        int size_left_subtree = inorder_root - inorder_left;
+        // 递归地构造左子树，并连接到根节点
+        // 先序遍历中「从 左边界+1 开始的 size_left_subtree」个元素就对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+        root.left = myBuildTree(preorder, inorder, preorder_left + 1, preorder_left + size_left_subtree, inorder_left, inorder_root - 1);
+        // 递归地构造右子树，并连接到根节点
+        // 先序遍历中「从 左边界+1+左子树节点数目 开始到 右边界」的元素就对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+        root.right = myBuildTree(preorder, inorder, preorder_left + size_left_subtree + 1, preorder_right, inorder_root + 1, inorder_right);
+        return root;
+    }
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        int n = preorder.length;
+        // 构造哈希映射，帮助我们快速定位根节点
+        indexMap = new HashMap<Integer, Integer>();
+        for (int i = 0; i < n; i++) {
+            indexMap.put(inorder[i], i);
+        }
+        return myBuildTree(preorder, inorder, 0, n - 1, 0, n - 1);
+    }
+}
+
+
+根据中序和后序遍历结果还原二叉树
+中序遍历和后续遍历的特性
+首先来看题目给出的两个已知条件 中序遍历序列 和 后序遍历序列 根据这两种遍历的特性我们可以得出两个结论
+
+在后序遍历序列中,最后一个元素为树的根节点
+在中序遍历序列中,根节点的左边为左子树，根节点的右边为右子树
+
+根据中序遍历和后续遍历的特性我们进行树的还原过程分析
+
+首先在后序遍历序列中找到根节点(最后一个元素)
+根据根节点在中序遍历序列中找到根节点的位置
+根据根节点的位置将中序遍历序列分为左子树和右子树
+根据根节点的位置确定左子树和右子树在中序数组和后续数组中的左右边界位置
+递归构造左子树和右子树
+返回根节点结束
+
+树的还原过程变量定义
+需要定义几个变量帮助我们进行树的还原
+
+HashMap memo 需要一个哈希表来保存中序遍历序列中,元素和索引的位置关系.因为从后序序列中拿到根节点后，要在中序序列中查找对应的位置,从而将数组分为左子树和右子树
+int ri 根节点在中序遍历数组中的索引位置
+中序遍历数组的两个位置标记 [is, ie]，is 是起始位置，ie 是结束位置
+后序遍历数组的两个位置标记 [ps, pe] ps 是起始位置，pe 是结束位置
+
+位置关系的计算
+在找到根节点位置以后，我们要确定下一轮中，左子树和右子树在中序数组和后续数组中的左右边界的位置。
+
+左子树-中序数组 is = is, ie = ri - 1
+左子树-后序数组 ps = ps, pe = ps + ri - is - 1 (pe计算过程解释，后续数组的起始位置加上左子树长度-1 就是后后序数组结束位置了，左子树的长度 = 根节点索引-左子树)
+右子树-中序数组 is = ri + 1, ie = ie
+右子树-后序数组 ps = ps + ri - is, pe - 1
+class Solution {
+
+    HashMap<Integer,Integer> memo = new HashMap<>();
+    int[] post;
+
+    public TreeNode buildTree(int[] inorder, int[] postorder) {
+        for(int i = 0;i < inorder.length; i++) memo.put(inorder[i], i);
+        post = postorder;
+        TreeNode root = buildTree(0, inorder.length - 1, 0, post.length - 1);
+        return root;
+    }
+
+    public TreeNode buildTree(int is, int ie, int ps, int pe) {
+        if(ie < is || pe < ps) return null;
+
+        int root = post[pe];
+        int ri = memo.get(root);
+
+        TreeNode node = new TreeNode(root);
+        node.left = buildTree(is, ri - 1, ps, ps + ri - is - 1);
+        node.right = buildTree(ri + 1, ie, ps + ri - is, pe - 1);
+        return node;
+    }
+}
+
+
+https://labuladong.gitee.io/algo/2/18/25/#bst-简介
+BST 的完整定义如下：
+1、BST 中任意一个节点的左子树所有节点的值都小于该节点的值，右子树所有节点的值都大于该节点的值。
+2、BST 中任意一个节点的左右子树都是 BST。
+boolean isValidBST(TreeNode root) {
+    return isValidBST(root, null, null);
+}
+
+/* 限定以 root 为根的子树节点必须满足 max.val > root.val > min.val */
+boolean isValidBST(TreeNode root, TreeNode min, TreeNode max) {
+    // base case
+    if (root == null) return true;
+    // 若 root.val 不符合 max 和 min 的限制，说明不是合法 BST
+    if (min != null && root.val <= min.val) return false;
+    if (max != null && root.val >= max.val) return false;
+    // 限定左子树的最大值是 root.val，右子树的最小值是 root.val
+    return isValidBST(root.left, min, root)
+        && isValidBST(root.right, root, max);
+}
+
+https://labuladong.gitee.io/algo/2/18/25/#在-bst-中搜索元素
+TreeNode searchBST(TreeNode root, int target) {
+    if (root == null) {
+        return null;
+    }
+    // 去左子树搜索
+    if (root.val > target) {
+        return searchBST(root.left, target);
+    }
+    // 去右子树搜索
+    if (root.val < target) {
+        return searchBST(root.right, target);
+    }
+    return root;
+}
+
+https://labuladong.gitee.io/algo/2/18/25/#在-bst-中插入一个数
+TreeNode insertIntoBST(TreeNode root, int val) {
+    // 找到空位置插入新节点
+    if (root == null) return new TreeNode(val);
+    // if (root.val == val)
+    //     BST 中一般不会插入已存在元素
+    if (root.val < val)
+        root.right = insertIntoBST(root.right, val);
+    if (root.val > val)
+        root.left = insertIntoBST(root.left, val);
+    return root;
+}
+
+https://labuladong.gitee.io/algo/2/18/25/#三在-bst-中删除一个数
+TreeNode deleteNode(TreeNode root, int key) {
+    if (root == null) return null;
+    if (root.val == key) {
+        // 这两个 if 把情况 1 和 2 都正确处理了
+        if (root.left == null) return root.right;
+        if (root.right == null) return root.left;
+        // 处理情况 3
+        TreeNode minNode = getMin(root.right);
+        root.val = minNode.val;
+        root.right = deleteNode(root.right, minNode.val);
+    } else if (root.val > key) {
+        root.left = deleteNode(root.left, key);
+    } else if (root.val < key) {
+        root.right = deleteNode(root.right, key);
+    }
+    return root;
+}
+
+TreeNode getMin(TreeNode node) {
+    // BST 最左边的就是最小的
+    while (node.left != null) node = node.left;
+    return node;
+}
+
+第一道题是力扣第 96 题「不同的二叉搜索树」，给你输入一个正整数 n，请你计算，存储 {1,2,3...,n} 这些值共有有多少种不同的 BST 结构。
+/* 主函数 */
+int numTrees(int n) {
+    // 计算闭区间 [1, n] 组成的 BST 个数
+    return count(1, n);
+}
+
+/* 计算闭区间 [lo, hi] 组成的 BST 个数 */
+int count(int lo, int hi) {
+    // base case
+    if (lo > hi) return 1;
+
+    int res = 0;
+    for (int i = lo; i <= hi; i++) {
+        // i 的值作为根节点 root
+        int left = count(lo, i - 1);
+        int right = count(i + 1, hi);
+        // 左右子树的组合数乘积是 BST 的总数
+        res += left * right;
+    }
+
+    return res;
+}
+
+// 备忘录
+int[][] memo;
+
+int numTrees(int n) {
+    // 备忘录的值初始化为 0
+    memo = new int[n + 1][n + 1];
+    return count(1, n);
+}
+
+int count(int lo, int hi) {
+    if (lo > hi) return 1;
+    // 查备忘录
+    if (memo[lo][hi] != 0) {
+        return memo[lo][hi];
+    }
+    int res = 0;
+    for (int mid = lo; mid <= hi; mid++) {
+        int left = count(lo, mid - 1);
+        int right = count(mid + 1, hi);
+        res += left * right;
+    }
+    // 将结果存入备忘录
+    memo[lo][hi] = res;
+    return res;
+}
+
+https://labuladong.gitee.io/algo/2/18/28/#二前序遍历解法
+二叉树的序列化与反序列化
+String SEP = ",";
+String NULL = "#";
+
+/* 主函数，将二叉树序列化为字符串 */
+String serialize(TreeNode root) {
+    StringBuilder sb = new StringBuilder();
+    serialize(root, sb);
+    return sb.toString();
+}
+
+/* 辅助函数，将二叉树存入 StringBuilder */
+void serialize(TreeNode root, StringBuilder sb) {
+    if (root == null) {
+        sb.append(NULL).append(SEP);
+        return;
+    }
+    /****** 前序遍历位置 ******/
+    sb.append(root.val).append(SEP);
+    /***********************/
+    serialize(root.left, sb);
+    serialize(root.right, sb);
+}
+
+/* 主函数，将字符串反序列化为二叉树结构 */
+TreeNode deserialize(String data) {
+    // 将字符串转化成列表
+    LinkedList<String> nodes = new LinkedList<>();
+    for (String s : data.split(SEP)) {
+        nodes.addLast(s);
+    }
+    return deserialize(nodes);
+}
+/* 辅助函数，通过 nodes 列表构造二叉树 */
+TreeNode deserialize(LinkedList<String> nodes) {
+    if (nodes.isEmpty()) return null;
+    /****** 前序遍历位置 ******/
+    // 列表最左侧就是根节点
+    String first = nodes.removeFirst();
+    if (first.equals(NULL)) return null;
+    TreeNode root = new TreeNode(Integer.parseInt(first));
+    /***********************/
+    root.left = deserialize(nodes);
+    root.right = deserialize(nodes);
+    return root;
+}
+
+/* 图节点的逻辑结构 */
+class Vertex {
+    int id;
+    Vertex[] neighbors;
+}
+/* 基本的 N 叉树节点 */
+class TreeNode {
+    int val;
+    TreeNode[] children;
+}
+邻接表很直观，我把每个节点 x 的邻居都存到一个列表里，然后把 x 和这个列表关联起来，这样就可以通过一个节点 x 找到它的所有相邻节点。
+邻接矩阵则是一个二维布尔数组，我们权且成为 matrix，如果节点 x 和 y 是相连的，那么就把 matrix[x][y] 设为 true（上图中绿色的方格代表 true）。
+如果想找节点 x 的邻居，去扫一圈 matrix[x][..] 就行了。
+那么，为什么有这两种存储图的方式呢？肯定是因为他们各有优劣。
+对于邻接表，好处是占用的空间少。
+你看邻接矩阵里面空着那么多位置，肯定需要更多的存储空间。
+但是，邻接表无法快速判断两个节点是否相邻。
+比如说我想判断节点 1 是否和节点 3 相邻，我要去邻接表里 1 对应的邻居列表里查找 3 是否存在。但对于邻接矩阵就简单了，只要看看 matrix[1][3] 就知道了，效率高。
+/* 多叉树遍历框架 */
+void traverse(TreeNode root) {
+    if (root == null) return;
+    for (TreeNode child : root.children)
+        traverse(child);
+}
+
+/* 图遍历框架 */
+boolean[] visited;
+void traverse(Graph graph, int s) {
+    if (visited[s]) return;
+    // 经过节点 s
+    visited[s] = true;
+    for (int neighbor : graph.neighbors(s))
+        traverse(graph, neighbor);
+    // 离开节点 s
+    visited[s] = false;
+}
+
+LRU
+LRU 缓存淘汰算法就是一种常用策略。LRU 的全称是 Least Recently Used，也就是说我们认为最近使用过的数据应该是是「有用的」，很久都没用过的数据应该是无用的，内存满了就优先删那些很久没用过的数据。
+
+class Node {
+    public int key, val;
+    public Node next, prev;
+    public Node(int k, int v) {
+        this.key = k;
+        this.val = v;
+    }
+}
+
+class DoubleList {
+    // 头尾虚节点
+    private Node head, tail;
+    // 链表元素数
+    private int size;
+    public DoubleList() {
+        // 初始化双向链表的数据
+        head = new Node(0, 0);
+        tail = new Node(0, 0);
+        head.next = tail;
+        tail.prev = head;
+        size = 0;
+    }
+    // 在链表尾部添加节点 x，时间 O(1)
+    public void addLast(Node x) {
+        x.prev = tail.prev;
+        x.next = tail;
+        tail.prev.next = x;
+        tail.prev = x;
+        size++;
+    }
+    // 删除链表中的 x 节点（x 一定存在）
+    // 由于是双链表且给的是目标 Node 节点，时间 O(1)
+    public void remove(Node x) {
+        x.prev.next = x.next;
+        x.next.prev = x.prev;
+        size--;
+    }
+    // 删除链表中第一个节点，并返回该节点，时间 O(1)
+    public Node removeFirst() {
+        if (head.next == tail)
+            return null;
+        Node first = head.next;
+        remove(first);
+        return first;
+    }
+    // 返回链表长度，时间 O(1)
+    public int size() { return size; }
+}
+class LRUCache {
+    int cap;
+    LinkedHashMap<Integer, Integer> cache = new LinkedHashMap<>();
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+    }
+
+    public int get(int key) {
+        if (!cache.containsKey(key)) {
+            return -1;
+        }
+        // 将 key 变为最近使用
+        makeRecently(key);
+        return cache.get(key);
+    }
+
+    public void put(int key, int val) {
+        if (cache.containsKey(key)) {
+            // 修改 key 的值
+            cache.put(key, val);
+            // 将 key 变为最近使用
+            makeRecently(key);
+            return;
+        }
+
+        if (cache.size() >= this.cap) {
+            // 链表头部就是最久未使用的 key
+            int oldestKey = cache.keySet().iterator().next();
+            cache.remove(oldestKey);
+        }
+        // 将新的 key 添加链表尾部
+        cache.put(key, val);
+    }
+
+    private void makeRecently(int key) {
+        int val = cache.get(key);
+        // 删除 key，重新插入到队尾
+        cache.remove(key);
+        cache.put(key, val);
+    }
+}
+
+LRU 算法的淘汰策略是 Least Recently Used，也就是每次淘汰那些最久没被使用的数据；而 LFU 算法的淘汰策略是 Least Frequently Used，也就是每次淘汰那些使用次数最少的数据。
+https://labuladong.gitee.io/algo/2/20/43/#二思路分析
+class LFUCache {
+    // key 到 val 的映射，我们后文称为 KV 表
+    HashMap<Integer, Integer> keyToVal;
+    // key 到 freq 的映射，我们后文称为 KF 表
+    HashMap<Integer, Integer> keyToFreq;
+    // freq 到 key 列表的映射，我们后文称为 FK 表
+    HashMap<Integer, LinkedHashSet<Integer>> freqToKeys;
+    // 记录最小的频次
+    int minFreq;
+    // 记录 LFU 缓存的最大容量
+    int cap;
+
+    public LFUCache(int capacity) {
+        keyToVal = new HashMap<>();
+        keyToFreq = new HashMap<>();
+        freqToKeys = new HashMap<>();
+        this.cap = capacity;
+        this.minFreq = 0;
+    }
+    public int get(int key) {}
+    public void put(int key, int val) {}
+
+}
+
+895.最大频率栈（困难）
+class FreqStack {
+    // 记录 FreqStack 中元素的最大频率
+    int maxFreq = 0;
+    // 记录 FreqStack 中每个 val 对应的出现频率，后文就称为 VF 表
+    HashMap<Integer, Integer> valToFreq = new HashMap<>();
+    // 记录频率 freq 对应的 val 列表，后文就称为 FV 表
+    HashMap<Integer, Stack<Integer>> freqToVals = new HashMap<>();
+
+    public void push(int val) {
+        // 修改 VF 表：val 对应的 freq 加一
+        int freq = valToFreq.getOrDefault(val, 0) + 1;
+        valToFreq.put(val, freq);
+        // 修改 FV 表：在 freq 对应的列表加上 val
+        freqToVals.putIfAbsent(freq, new Stack<>());
+        freqToVals.get(freq).push(val);
+        // 更新 maxFreq
+        maxFreq = Math.max(maxFreq, freq);
+    }
+
+    public int pop() {
+        // 修改 FV 表：pop 出一个 maxFreq 对应的元素 v
+        Stack<Integer> vals = freqToVals.get(maxFreq);
+        int v = vals.pop();
+        // 修改 VF 表：v 对应的 freq 减一
+        int freq = valToFreq.get(v) - 1;
+        valToFreq.put(v, freq);
+        // 更新 maxFreq
+        if (vals.isEmpty()) {
+            // 如果 maxFreq 对应的元素空了
+            maxFreq--;
+        }
+        return v;
+    }
+}
+
+https://labuladong.gitee.io/algo/2/20/50/#一二叉堆概览
+二叉堆（Binary Heap）没什么神秘，性质比二叉搜索树 BST 还简单。其主要操作就两个，sink（下沉）和 swim（上浮），
+用以维护二叉堆的性质。其主要应用有两个，首先是一种排序方法「堆排序」，第二是一种很有用的数据结构「优先级队列」。
+// 父节点的索引
+int parent(int root) {
+    return root / 2;
+}
+// 左孩子的索引
+int left(int root) {
+    return root * 2;
+}
+// 右孩子的索引
+int right(int root) {
+    return root * 2 + 1;
+}
+
+https://labuladong.gitee.io/algo/2/20/50/#三实现-swim-和-sink
+public class MaxPQ
+    <Key extends Comparable<Key>> {
+    // 存储元素的数组
+    private Key[] pq;
+    // 当前 Priority Queue 中的元素个数
+    private int N = 0;
+
+    public MaxPQ(int cap) {
+        // 索引 0 不用，所以多分配一个空间
+        pq = (Key[]) new Comparable[cap + 1];
+    }
+
+    /* 返回当前队列中最大元素 */
+    public Key max() {
+        return pq[1];
+    }
+
+    /* 插入元素 e */
+    public void insert(Key e) {...}
+
+    /* 删除并返回当前队列中最大元素 */
+    public Key delMax() {...}
+
+    /* 上浮第 k 个元素，以维护最大堆性质 */
+    private void swim(int k) {...}
+
+    /* 下沉第 k 个元素，以维护最大堆性质 */
+    private void sink(int k) {...}
+
+    /* 交换数组的两个元素 */
+    private void exch(int i, int j) {
+        Key temp = pq[i];
+        pq[i] = pq[j];
+        pq[j] = temp;
+    }
+
+    /* pq[i] 是否比 pq[j] 小？ */
+    private boolean less(int i, int j) {
+        return pq[i].compareTo(pq[j]) < 0;
+    }
+
+    /* 还有 left, right, parent 三个方法 */
+}
+
+private void swim(int k) {
+    // 如果浮到堆顶，就不能再上浮了
+    while (k > 1 && less(parent(k), k)) {
+        // 如果第 k 个元素比上层大
+        // 将 k 换上去
+        exch(parent(k), k);
+        k = parent(k);
+    }
+}
+
+private void sink(int k) {
+    // 如果沉到堆底，就沉不下去了
+    while (left(k) <= N) {
+        // 先假设左边节点较大
+        int older = left(k);
+        // 如果右边节点存在，比一下大小
+        if (right(k) <= N && less(older, right(k)))
+            older = right(k);
+        // 结点 k 比俩孩子都大，就不必下沉了
+        if (less(older, k)) break;
+        // 否则，不符合最大堆的结构，下沉 k 结点
+        exch(k, older);
+        k = older;
+    }
+}
+
+public void insert(Key e) {
+    N++;
+    // 先把新元素加到最后
+    pq[N] = e;
+    // 然后让它上浮到正确的位置
+    swim(N);
+}
+public Key delMax() {
+    // 最大堆的堆顶就是最大元素
+    Key max = pq[1];
+    // 把这个最大元素换到最后，删除之
+    exch(1, N);
+    pq[N] = null;
+    N--;
+    // 让 pq[1] 下沉到正确位置
+    sink(1);
+    return max;
+}
+
+队列是一种先进先出的数据结构，栈是一种先进后出的数据结构，形象一点就是这样：
+https://labuladong.gitee.io/algo/images/%E6%A0%88%E9%98%9F%E5%88%97/1.jpg
+https://labuladong.gitee.io/algo/2/20/51/#一用栈实现队列
+class MyQueue {
+    private Stack<Integer> s1, s2;
+
+    public MyQueue() {
+        s1 = new Stack<>();
+        s2 = new Stack<>();
+    }
+    /** 添加元素到队尾 */
+    public void push(int x) {
+        s1.push(x);
+    }
+
+    /** 删除队头的元素并返回 */
+    public int pop(){
+        // 先调用 peek 保证 s2 非空
+        peek();
+        return s2.pop();
+    }
+
+    /** 返回队头元素 */
+    public int peek(){
+        if (s2.isEmpty())
+            // 把 s1 元素压入 s2
+            while (!s1.isEmpty())
+                s2.push(s1.pop());
+        return s2.peek();
+    }
+
+    /** 判断队列是否为空 */
+    public boolean empty(){
+     return s1.isEmpty() && s2.isEmpty();
+    }
+}
+
+https://labuladong.gitee.io/algo/2/20/51/#二用队列实现栈
+class MyStack {
+    Queue<Integer> q = new LinkedList<>();
+    int top_elem = 0;
+    /** 添加元素到栈顶 */
+    public void push(int x){
+         q.offer(x);
+            top_elem = x;
+    }
+
+    /** 删除栈顶的元素并返回 */
+    public int pop(){
+     int size = q.size();
+        // 留下队尾 2 个元素
+        while (size > 2) {
+            q.offer(q.poll());
+            size--;
+        }
+        // 记录新的队尾元素
+        top_elem = q.peek();
+        q.offer(q.poll());
+        // 删除之前的队尾元素
+        return q.poll();
+    }
+
+    /** 返回栈顶元素 */
+    public int top(){
+     return top_elem;
+    }
+
+    /** 判断栈是否为空 */
+    public boolean empty(){
+    return  q.isEmpty();
+    }
+}
+
+https://labuladong.gitee.io/algo/2/21/53/#一维数组中的前缀和
+class NumArray {
+    // 前缀和数组
+    private int[] preSum;
+    /* 输入一个数组，构造前缀和 */
+    public NumArray(int[] nums) {
+        // preSum[0] = 0，便于计算累加和
+        preSum = new int[nums.length + 1];
+        // 计算 nums 的累加和
+        for (int i = 1; i < preSum.length; i++) {
+            preSum[i] = preSum[i - 1] + nums[i - 1];
+        }
+    }
+    /* 查询闭区间 [left, right] 的累加和 */
+    public int sumRange(int left, int right) {
+        return preSum[right + 1] - preSum[left];
+    }
+}
+
+https://labuladong.gitee.io/algo/2/21/53/#二维矩阵中的前缀和
+class NumMatrix {
+    // preSum[i][j] 记录矩阵 [0, 0, i, j] 的元素和
+    private int[][] preSum;
+
+    public NumMatrix(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        if (m == 0 || n == 0) return;
+        // 构造前缀和矩阵
+        preSum = new int[m + 1][n + 1];
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                // 计算每个矩阵 [0, 0, i, j] 的元素和
+                preSum[i][j] = preSum[i-1][j] + preSum[i][j-1] + matrix[i - 1][j - 1] - preSum[i-1][j-1];
+            }
+        }
+    }
+
+    // 计算子矩阵 [x1, y1, x2, y2] 的元素和
+    public int sumRegion(int x1, int y1, int x2, int y2) {
+        // 目标矩阵之和由四个相邻矩阵运算获得
+        return preSum[x2+1][y2+1] - preSum[x1][y2+1] - preSum[x2+1][y1] + preSum[x1][y1];
+    }
+}
+
+https://labuladong.gitee.io/algo/2/21/53/#和为-k-的子数组
+int subarraySum(int[] nums, int k) {
+    int n = nums.length;
+    // map：前缀和 -> 该前缀和出现的次数
+    HashMap<Integer, Integer>  preSum = new HashMap<>();
+    // base case
+    preSum.put(0, 1);
+    int res = 0, sum0_i = 0;
+    for (int i = 0; i < n; i++) {
+        sum0_i += nums[i];
+        // 这是我们想找的前缀和 nums[0..j]
+        int sum0_j = sum0_i - k;
+        // 如果前面有这个前缀和，则直接更新答案
+        if (preSum.containsKey(sum0_j))
+            res += preSum.get(sum0_j);
+        // 把前缀和 nums[0..i] 加入并记录出现次数
+        preSum.put(sum0_i,    preSum.getOrDefault(sum0_i, 0) + 1);
+    }
+    return res;
+}
+
+差分数组
+int[] diff = new int[nums.length];
+// 构造差分数组
+diff[0] = nums[0];
+for (int i = 1; i < nums.length; i++) {
+    diff[i] = nums[i] - nums[i - 1];
+}
+通过这个 diff 差分数组是可以反推出原始数组 nums 的，代码逻辑如下：
+int[] res = new int[diff.length];
+// 根据差分数组构造结果数组
+res[0] = diff[0];
+for (int i = 1; i < diff.length; i++) {
+    res[i] = res[i - 1] + diff[i];
+}
+
+// 差分数组工具类
+class Difference {
+    // 差分数组
+    private int[] diff;
+
+    /* 输入一个初始数组，区间操作将在这个数组上进行 */
+    public Difference(int[] nums) {
+        assert nums.length > 0;
+        diff = new int[nums.length];
+        // 根据初始数组构造差分数组
+        diff[0] = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            diff[i] = nums[i] - nums[i - 1];
+        }
+    }
+
+    /* 给闭区间 [i,j] 增加 val（可以是负数）*/
+    public void increment(int i, int j, int val) {
+        diff[i] += val;
+        if (j + 1 < diff.length) {
+            diff[j + 1] -= val;
+        }
+    }
+
+    /* 返回结果数组 */
+    public int[] result() {
+        int[] res = new int[diff.length];
+        // 根据差分数组构造结果数组
+        res[0] = diff[0];
+        for (int i = 1; i < diff.length; i++) {
+            res[i] = res[i - 1] + diff[i];
+        }
+        return res;
+    }
+}
+
+https://labuladong.gitee.io/algo/2/21/55/#一快慢指针的常见算法
+1、判定链表中是否含有环
+boolean hasCycle(ListNode head) {
+    ListNode fast, slow;
+    fast = slow = head;
+    while (fast != null && fast.next != null) {
+        fast = fast.next.next;
+        slow = slow.next;
+
+        if (fast == slow) return true;
+    }
+    return false;
+}
+2、已知链表中含有环，返回这个环的起始位置
+ListNode detectCycle(ListNode head) {
+    ListNode fast, slow;
+    fast = slow = head;
+    while (fast != null && fast.next != null) {
+        fast = fast.next.next;
+        slow = slow.next;
+        if (fast == slow) break;
+    }
+    // 上面的代码类似 hasCycle 函数
+    if (fast == null || fast.next == null) {
+        // fast 遇到空指针说明没有环
+        return null;
+    }
+
+    slow = head;
+    while (slow != fast) {
+        fast = fast.next;
+        slow = slow.next;
+    }
+    return slow;
+}
+3、寻找链表的中点
+ListNode middleNode(ListNode head) {
+    ListNode fast, slow;
+    fast = slow = head;
+    while (fast != null && fast.next != null) {
+        fast = fast.next.next;
+        slow = slow.next;
+    }
+    // slow 就在中间位置
+    return slow;
+}
+4、寻找链表的倒数第 n 个元素
+ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode fast, slow;
+    fast = slow = head;
+    // 快指针先前进 n 步
+    while (n-- > 0) {
+        fast = fast.next;
+    }
+    if (fast == null) {
+        // 如果此时快指针走到头了，
+        // 说明倒数第 n 个节点就是第一个节点
+        return head.next;
+    }
+    // 让慢指针和快指针同步向前
+    while (fast != null && fast.next != null) {
+        fast = fast.next;
+        slow = slow.next;
+    }
+    // slow.next 就是倒数第 n 个节点，删除它
+    slow.next = slow.next.next;
+    return head;
+}
+
+https://labuladong.gitee.io/algo/2/21/55/#二左右指针的常用算法
+1、二分查找
+int binarySearch(int[] nums, int target) {
+    int left = 0;
+    int right = nums.length - 1;
+    while(left <= right) {
+        int mid = (right + left) / 2;
+        if(nums[mid] == target)
+            return mid;
+        else if (nums[mid] < target)
+            left = mid + 1;
+        else if (nums[mid] > target)
+            right = mid - 1;
+    }
+    return -1;
+}
+2、两数之和
+int[] twoSum(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left < right) {
+        int sum = nums[left] + nums[right];
+        if (sum == target) {
+            // 题目要求的索引是从 1 开始的
+            return new int[]{left + 1, right + 1};
+        } else if (sum < target) {
+            left++; // 让 sum 大一点
+        } else if (sum > target) {
+            right--; // 让 sum 小一点
+        }
+    }
+    return new int[]{-1, -1};
+}
+3、反转数组
+void reverseString(char[] arr) {
+    int left = 0;
+    int right = arr.length - 1;
+    while (left < right) {
+        // 交换 arr[left] 和 arr[right]
+        char temp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = temp;
+        left++; right--;
+    }
+}
+
+滑动窗口
+/* 滑动窗口算法框架 */
+void slidingWindow(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    while (right < s.size()) {
+        // c 是将移入窗口的字符
+        char c = s[right];
+        // 右移窗口
+        right++;
+        // 进行窗口内数据的一系列更新
+        ...
+
+        /*** debug 输出的位置 ***/
+        printf("window: [%d, %d)\n", left, right);
+        /********************/
+
+        // 判断左侧窗口是否要收缩
+        while (window needs shrink) {
+            // d 是将移出窗口的字符
+            char d = s[left];
+            // 左移窗口
+            left++;
+            // 进行窗口内数据的一系列更新
+            ...
+        }
+    }
+}
+
+滑动窗口算法的思路是这样：
+
+1、我们在字符串 S 中使用双指针中的左右指针技巧，初始化 left = right = 0，把索引左闭右开区间 [left, right) 称为一个「窗口」。
+2、我们先不断地增加 right 指针扩大窗口 [left, right)，直到窗口中的字符串符合要求（包含了 T 中的所有字符）。
+3、此时，我们停止增加 right，转而不断增加 left 指针缩小窗口 [left, right)，直到窗口中的字符串不再符合要求（不包含 T 中的所有字符了）。同时，每次增加 left，我们都要更新一轮结果。
+4、重复第 2 和第 3 步，直到 right 到达字符串 S 的尽头。
+这个思路其实也不难，第 2 步相当于在寻找一个「可行解」，然后第 3 步在优化这个「可行解」，最终找到最优解，
+也就是最短的覆盖子串。左右指针轮流前进，窗口大小增增减减，窗口不断向右滑动，这就是「滑动窗口」这个名字的来历。
+
+string minWindow(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+    int left = 0, right = 0;
+    int valid = 0;
+    // 记录最小覆盖子串的起始索引及长度
+    int start = 0, len = INT_MAX;
+    while (right < s.size()) {
+        // c 是将移入窗口的字符
+        char c = s[right];
+        // 右移窗口
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+        // 判断左侧窗口是否要收缩
+        while (valid == need.size()) {
+            // 在这里更新最小覆盖子串
+            if (right - left < len) {
+                start = left;
+                len = right - left;
+            }
+            // d 是将移出窗口的字符
+            char d = s[left];
+            // 左移窗口
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    // 返回最小覆盖子串
+    return len == INT_MAX ? "" : s.substr(start, len);
+}
+
+https://labuladong.gitee.io/algo/2/21/56/#二字符串排列
+// 判断 s 中是否存在 t 的排列
+bool checkInclusion(string t, string s) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+
+        // 判断左侧窗口是否要收缩
+        while (right - left >= t.size()) {
+            // 在这里判断是否找到了合法的子串
+            if (valid == need.size())
+                return true;
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    // 未找到符合条件的子串
+    return false;
+}
+
+https://labuladong.gitee.io/algo/2/21/56/#三找所有字母异位词
+vector<int> findAnagrams(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++;
+
+    int left = 0, right = 0;
+    int valid = 0;
+    vector<int> res; // 记录结果
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        if (need.count(c)) {
+            window[c]++;
+            if (window[c] == need[c])
+                valid++;
+        }
+        // 判断左侧窗口是否要收缩
+        while (right - left >= t.size()) {
+            // 当窗口符合条件时，把起始索引加入 res
+            if (valid == need.size())
+                res.push_back(left);
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            if (need.count(d)) {
+                if (window[d] == need[d])
+                    valid--;
+                window[d]--;
+            }
+        }
+    }
+    return res;
+}
+
+https://labuladong.gitee.io/algo/2/21/56/#四最长无重复子串
+int lengthOfLongestSubstring(string s) {
+    unordered_map<char, int> window;
+    int left = 0, right = 0;
+    int res = 0; // 记录结果
+    while (right < s.size()) {
+        char c = s[right];
+        right++;
+        // 进行窗口内数据的一系列更新
+        window[c]++;
+        // 判断左侧窗口是否要收缩
+        while (window[c] > 1) {
+            char d = s[left];
+            left++;
+            // 进行窗口内数据的一系列更新
+            window[d]--;
+        }
+        // 在这里更新答案
+        res = max(res, right - left);
+    }
+    return res;
+}
+
+https://labuladong.gitee.io/algo/2/21/57/#一寻找一个数基本的二分搜索
+int binarySearch(int[] nums, int target) {
+    int left = 0;
+    int right = nums.length - 1; // 注意
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if(nums[mid] == target)
+            return mid;
+        else if (nums[mid] < target)
+            left = mid + 1; // 注意
+        else if (nums[mid] > target)
+            right = mid - 1; // 注意
+    }
+    return -1;
+}
+
+https://labuladong.gitee.io/algo/2/21/57/#二寻找左侧边界的二分搜索
+int left_bound(int[] nums, int target) {
+    if (nums.length == 0) return -1;
+    int left = 0;
+    int right = nums.length; // 注意
+
+    while (left < right) { // 注意
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+            right = mid;
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid; // 注意
+        }
+    }
+    return left;
+}
+
+int left_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    // 搜索区间为 [left, right]
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            // 搜索区间变为 [mid+1, right]
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            // 搜索区间变为 [left, mid-1]
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 收缩右侧边界
+            right = mid - 1;
+        }
+    }
+    // 检查出界情况
+    if (left >= nums.length || nums[left] != target)
+        return -1;
+    return left;
+}
+
+https://labuladong.gitee.io/algo/2/21/57/#三寻找右侧边界的二分查找
+int right_bound(int[] nums, int target) {
+    if (nums.length == 0) return -1;
+    int left = 0, right = nums.length;
+
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+            left = mid + 1; // 注意
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid;
+        }
+    }
+    return left - 1; // 注意
+}
+
+int right_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 这里改成收缩左侧边界即可
+            left = mid + 1;
+        }
+    }
+    // 这里改为检查 right 越界的情况，见下图
+    if (right < 0 || nums[right] != target)
+        return -1;
+    return right;
+}
+
+https://labuladong.gitee.io/algo/2/21/57/#四逻辑统一
+第一个，最基本的二分查找算法：
+因为我们初始化 right = nums.length - 1
+所以决定了我们的「搜索区间」是 [left, right]
+所以决定了 while (left <= right)
+同时也决定了 left = mid+1 和 right = mid-1
+
+因为我们只需找到一个 target 的索引即可
+所以当 nums[mid] == target 时可以立即返回
+
+第二个，寻找左侧边界的二分查找：
+因为我们初始化 right = nums.length
+所以决定了我们的「搜索区间」是 [left, right)
+所以决定了 while (left < right)
+同时也决定了 left = mid + 1 和 right = mid
+
+因为我们需找到 target 的最左侧索引
+所以当 nums[mid] == target 时不要立即返回
+而要收紧右侧边界以锁定左侧边界
+
+第三个，寻找右侧边界的二分查找：
+因为我们初始化 right = nums.length
+所以决定了我们的「搜索区间」是 [left, right)
+所以决定了 while (left < right)
+同时也决定了 left = mid + 1 和 right = mid
+
+因为我们需找到 target 的最右侧索引
+所以当 nums[mid] == target 时不要立即返回
+而要收紧左侧边界以锁定右侧边界
+
+又因为收紧左侧边界时必须 left = mid + 1
+所以最后无论返回 left 还是 right，必须减一
+
+int binary_search(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if(nums[mid] == target) {
+            // 直接返回
+            return mid;
+        }
+    }
+    // 直接返回
+    return -1;
+}
+
+int left_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定左侧边界
+            right = mid - 1;
+        }
+    }
+    // 最后要检查 left 越界的情况
+    if (left >= nums.length || nums[left] != target)
+        return -1;
+    return left;
+}
+
+int right_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定右侧边界
+            left = mid + 1;
+        }
+    }
+    // 最后要检查 right 越界的情况
+    if (right < 0 || nums[right] != target)
+        return -1;
+    return right;
+}
+
+https://labuladong.gitee.io/algo/2/21/63/#有序数组链表去重
+int removeDuplicates(int[] nums) {
+    if (nums.length == 0) {
+        return 0;
+    }
+    int slow = 0, fast = 0;
+    while (fast < nums.length) {
+        if (nums[fast] != nums[slow]) {
+            slow++;
+            // 维护 nums[0..slow] 无重复
+            nums[slow] = nums[fast];
+        }
+        fast++;
+    }
+    // 数组长度为索引 + 1
+    return slow + 1;
+}
+
+ListNode deleteDuplicates(ListNode head) {
+    if (head == null) return null;
+    ListNode slow = head, fast = head;
+    while (fast != null) {
+        if (fast.val != slow.val) {
+            // nums[slow] = nums[fast];
+            slow.next = fast;
+            // slow++;
+            slow = slow.next;
+        }
+        // fast++
+        fast = fast.next;
+    }
+    // 断开与后面重复元素的连接
+    slow.next = null;
+    return head;
+}
+
+https://labuladong.gitee.io/algo/2/21/63/#移除元素
+int removeElement(int[] nums, int val) {
+    int fast = 0, slow = 0;
+    while (fast < nums.length) {
+        if (nums[fast] != val) {
+            nums[slow] = nums[fast];
+            slow++;
+        }
+        fast++;
+    }
+    return slow;
+}
+
+https://labuladong.gitee.io/algo/2/21/63/#移动零
+void moveZeroes(int[] nums) {
+    // 去除 nums 中的所有 0
+    // 返回去除 0 之后的数组长度
+    int p = removeElement(nums, 0);
+    // 将 p 之后的所有元素赋值为 0
+    for (; p < nums.length; p++) {
+        nums[p] = 0;
+    }
+}
+
+// 见上文代码实现
+int removeElement(int[] nums, int val);
+
+https://labuladong.gitee.io/algo/2/21/64/#twosum-i
+int[] twoSum(int[] nums, int target) {
+    int n = nums.length;
+    HashMap<Integer, Integer> index = new HashMap<>();
+    // 构造一个哈希表：元素映射到相应的索引
+    for (int i = 0; i < n; i++)
+        index.put(nums[i], i);
+    for (int i = 0; i < n; i++) {
+        int other = target - nums[i];
+        // 如果 other 存在且不是 nums[i] 本身
+        if (index.containsKey(other) && index.get(other) != i)
+            return new int[] {i, index.get(other)};
+    }
+    return new int[] {-1, -1};
+}
+
+https://labuladong.gitee.io/algo/2/21/64/#twosum-ii
+class TwoSum {
+    Map<Integer, Integer> freq = new HashMap<>();
+
+    public void add(int number) {
+        // 记录 number 出现的次数
+        freq.put(number, freq.getOrDefault(number, 0) + 1);
+    }
+
+    public boolean find(int value) {
+        for (Integer key : freq.keySet()) {
+            int other = value - key;
+            // 情况一
+            if (other == key && freq.get(key) > 1)
+                return true;
+            // 情况二
+            if (other != key && freq.containsKey(other))
+                return true;
+        }
+        return false;
+    }
+}
+
+动态规划:
+首先，动态规划的穷举有点特别，因为这类问题存在「重叠子问题」，如果暴力穷举的话效率会极其低下，所以需要「备忘录」或者「DP table」来优化穷举过程，避免不必要的计算。
+而且，动态规划问题一定会具备「最优子结构」，才能通过子问题的最值得到原问题的最值。
+另外，虽然动态规划的核心思想就是穷举求最值，但是问题可以千变万化，穷举所有可行解其实并不是一件容易的事，只有列出正确的「状态转移方程」，才能正确地穷举。
+以上提到的重叠子问题、最优子结构、状态转移方程就是动态规划三要素。具体什么意思等会会举例详解，
+但是在实际的算法问题中，写出状态转移方程是最困难的，这也就是为什么很多朋友觉得动态规划问题困难的原因，我来提供我研究出来的一个思维框架，辅助你思考状态转移方程：
+明确 base case -> 明确「状态」-> 明确「选择」 -> 定义 dp 数组/函数的含义。
+按上面的套路走，最后的结果就可以套这个框架：
+# 初始化 base case
+dp[0][0][...] = base
+# 进行状态转移
+for 状态1 in 状态1的所有取值：
+    for 状态2 in 状态2的所有取值：
+        for ...
+            dp[状态1][状态2][...] = 求最值(选择1，选择2...)
+
+https://labuladong.gitee.io/algo/3/23/66/#一斐波那契数列
+int fib(int N) {
+    // 备忘录全初始化为 0
+    int[] memo = new int[N + 1];
+    // 进行带备忘录的递归
+    return helper(memo, N);
+}
+
+int helper(int[] memo, int n) {
+    // base case
+    if (n == 0 || n == 1) return n;
+    // 已经计算过，不用再计算了
+    if (memo[n] != 0) return memo[n];
+    memo[n] = helper(memo, n - 1) + helper(memo, n - 2);
+    return memo[n];
+}
+3、dp 数组的迭代解法
+int fib(int N) {
+    if (N == 0) return 0;
+    int[] dp = new int[N + 1];
+    // base case
+    dp[0] = 0; dp[1] = 1;
+    // 状态转移
+    for (int i = 2; i <= N; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    return dp[N];
+}
+
+https://labuladong.gitee.io/algo/3/23/66/#二凑零钱问题
+int coinChange(int[] coins, int amount) {
+    // 题目要求的最终结果是 dp(amount)
+    return dp(coins, amount)
+}
+
+int dp(int[] coins, int amount) {
+    // base case
+    if (amount == 0) return 0;
+    if (amount < 0) return -1;
+
+    int res = Integer.MAX_VALUE;
+    for (int coin : coins) {
+        // 计算子问题的结果
+        int subProblem = dp(coins, amount - coin);
+        // 子问题无解则跳过
+        if (subProblem == -1) continue;
+        // 在子问题中选择最优解，然后加一
+        res = Math.min(res, subProblem + 1);
+    }
+
+    return res == Integer.MAX_VALUE ? -1 : res;
+}
+
+https://labuladong.gitee.io/algo/3/23/67/#一动态规划解法
+int lengthOfLIS(int[] nums) {
+    int[] dp = new int[nums.length];
+    // base case：dp 数组全都初始化为 1
+    Arrays.fill(dp, 1);
+    for (int i = 0; i < nums.length; i++) {
+        for (int j = 0; j < i; j++) {
+            if (nums[i] > nums[j])
+                dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+    }
+
+    int res = 0;
+    for (int i = 0; i < dp.length; i++) {
+        res = Math.max(res, dp[i]);
+    }
+    return res;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
