@@ -7,13 +7,6 @@ package techArticle.algorithm.leetcode.linkedlist;
  */
 public class LeetCode83_removeDuplicatesFromSortedList {
 
-    public static class ListNode {
-      int val;
-      ListNode next;
-      ListNode() {}
-      ListNode(int val) { this.val = val; }
-      ListNode(int val, ListNode next) { this.val = val; this.next = next; }
-  }
 
     public static void main(String[] args) {
         int[] a = {1,1,2,2,3,4,5,6,6};

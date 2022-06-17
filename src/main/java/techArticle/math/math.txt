@@ -1,0 +1,6 @@
+微分到底是什么意思？实际意义是什么？
+https://www.zhihu.com/question/53159621/answer/276684374
+https://www.zhihu.com/question/22199657/answer/115178055
+
+人们专门弄了一个自然对数函数的底数 e，是为什么？
+https://www.zhihu.com/question/24264370/answer/547588113

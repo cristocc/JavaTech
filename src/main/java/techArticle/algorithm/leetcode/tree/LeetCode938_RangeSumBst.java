@@ -7,24 +7,6 @@ package techArticle.algorithm.leetcode.tree;
  */
 public class LeetCode938_RangeSumBst {
 
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
-
-        TreeNode() {
-        }
-
-        TreeNode(int val) {
-            this.val = val;
-        }
-
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
-        }
-    }
 
     int res= 0 ;
     int _low = 0;

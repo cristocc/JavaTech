@@ -1,5 +1,8 @@
 package techArticle.algorithm.leetcode.array;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * Created by crist on 2021/4/19
  *
@@ -23,7 +26,6 @@ public class LeetCode27_removeEle {
     public static void main(String[] args) {
         int[] nums = {4,2,3,4};
         removeElement(nums,3);
-
 
     }
 }

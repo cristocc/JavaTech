@@ -8,25 +8,8 @@ package techArticle.algorithm.leetcode.tree;
  */
 public class LeetCode783_minDiffInBST {
 
+//而我们知道二叉搜索树有个性质为二叉搜索树中序遍历得到的值序列是递增有序的
 
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
-
-        TreeNode() {
-        }
-
-        TreeNode(int val) {
-            this.val = val;
-        }
-
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
-        }
-    }
 
     public static int pre;
     public static int ans;

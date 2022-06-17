@@ -800,8 +800,13 @@ e.g. ¿Te interesan esos libros?​Are you interested in those books?​
 
 
 
-
-
+ser (to be)             estar (to be)
+soy                     estoy
+eres                        estas
+es                      esta
+ somos                       estamos
+       sois                 estais
+       son                 estan
 
 
 

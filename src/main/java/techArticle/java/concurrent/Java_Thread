@@ -1,6 +1,6 @@
 Java的wait()、notify()学习三部曲之一：JVM源码分析
 https://blog.csdn.net/boling_cavalry/article/details/77793224
-
+https://blog.csdn.net/zwjyyy1203/article/details/106217887
 
 bash configure --enable-debug --with-jvm-variants=server  --with-boot-jdk=/home/crist/bootjdk/jdk-11.0.2
 
@@ -11,3 +11,6 @@ BLOCKED，阻塞等待锁的线程状态，表示处于阻塞状态的线程正�
 WAITING，等待状态，一个处于等待状态的线程正在等待另一个线程执行某个特定的动作，比如，一个线程调用了 Object.wait() 方法，那它就在等待另一个线程调用 Object.notify() 或 Object.notifyAll() 方法；
 TIMED_WAITING，计时等待状态，和等待状态（WAITING）类似，它只是多了超时时间，比如调用了有超时时间设置的方法 Object.wait(long timeout) 和 Thread.join(long timeout) 等这些方法时，它才会进入此状态；
 TERMINATED，终止状态，表示线程已经执行完成。
+
+Barriers
+http://gee.cs.oswego.edu/dl/jmm/cookbook.html
