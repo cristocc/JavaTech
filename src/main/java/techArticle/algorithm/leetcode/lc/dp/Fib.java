@@ -11,27 +11,16 @@ public class Fib {
 
     //用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。(若队列中没有元素，deleteHead 操作返回 -1 )
 
-    LinkedList<Integer> A,B;
-
-    public Fib() {
-        A = new LinkedList<>();
-        B= new LinkedList<>();
-    }
-
-    public void appendTail(int value) {
-        A.addLast(value);
-    }
-
-    public int deleteHead() {
-        if(!B.isEmpty()){
-            return B.removeLast();
+    public int fib(int n) {
+        if(n == 0){
+            return 0;
         }
-        if(A.isEmpty()){
-            return -1;
+        int[] dp = new int[n + 1];
+        dp[1] = 1;
+        for(int i = 2;i<=n;i++){
+            dp[i] = (dp[i-1] + dp[i-2])% 1000000007;
         }
-        while (!A.isEmpty()){
-            B.addLast(A.removeLast());
-        }
-        return B.removeLast();
+        return dp[n];
+
     }
 }

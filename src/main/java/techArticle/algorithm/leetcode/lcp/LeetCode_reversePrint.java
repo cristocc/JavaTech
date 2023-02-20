@@ -1,6 +1,12 @@
 package techArticle.algorithm.leetcode.lcp;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+import techArticle.java.designPattern.visitor.Keyboard;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by crist on 2022/7/13
@@ -9,17 +15,9 @@ import java.util.HashSet;
  */
 public class LeetCode_reversePrint {
 
-
-    public int findRepeatNumber(int[] nums) {
-        HashSet<Integer> set = new HashSet<>();
-        for(Integer val:nums){
-            if(set.contains(val)){
-                return val;
-            }else {
-                set.add(val);
-            }
-        }
-        return 0;
+    public String replaceSpace(String s) {
+        s = s.replace(" ","%20");
+        return s;
 
     }
 }

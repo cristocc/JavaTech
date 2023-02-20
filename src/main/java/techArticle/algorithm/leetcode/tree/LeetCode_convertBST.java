@@ -6,18 +6,21 @@ package techArticle.algorithm.leetcode.tree;
  * @author cc
  */
 public class LeetCode_convertBST {
-    TreeNode convertBST(TreeNode root) {
-        traverse(root);
+
+    int sum = 0;
+
+    public TreeNode convertBST(TreeNode root) {
+        dfs(root);
         return root;
     }
-    int sum = 0;// 记录累加和
-    void traverse(TreeNode root) {
-        if (root == null) {
+
+    public void dfs(TreeNode root){
+        if(null == root){
             return;
         }
-        traverse(root.right);
-        sum += root.val;// 维护累加和
-        root.val = sum;// 将 BST 转化成累加树
-        traverse(root.left);
+        dfs(root.right);
+        sum += root.val;
+        root.val = sum;
+        dfs(root.left);
     }
 }

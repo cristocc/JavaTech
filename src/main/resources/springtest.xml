@@ -2,129 +2,24 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:aop="http://www.springframework.org/schema/aop"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
         http://www.springframework.org/schema/lang
         http://www.springframework.org/schema/lang/spring-lang.xsd">
 
 
-  <context:component-scan base-package="study"/>
+ <context:component-scan base-package="study"/>
 
 
-<!--    <bean id="user" class="com.demo.model.User" init-method="init" destroy-method="destroy" autowire="byType">
-        <property name="name" value="张三"/>
-        <property name="age" value="18"/>
-    </bean>-->
+    <bean id="lifecycleExampleBean" class="study.model.LifecycleExampleBean" init-method="init" destroy-method="cleanup"/>
 
-
-
-    <bean id="dog" class="study.model.Dog" >
-        <property name="name" value="cc"/>
-    </bean>
-
-
-    <bean id="cat" class="study.model.Cat" autowire="byName" >
-        <property name="name" value="xr"/>
-        <property name="person">
-            <bean class="study.model.Cat.Person"> <!-- this is the inner bean -->
-                <property name="name" value="Fiona Apple"/>
-                <property name="age" value="25"/>
-            </bean>
-        </property>
-<!--        <property name="employee">
-            <idref bean="employee"/>
-        </property>-->
-<!--        <property name="dog">
-            <ref bean="dog"/>
-        </property>-->
-    </bean>
-
-<!--    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
-        <property name="basename">
-            <value>message</value>
-        </property>
-    </bean>-->
-
-   <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
-        <property name="propertyEditorRegistrars">
-            <list>
-                <bean class="study.service.CustomDateEditorRegistrar" />
-            </list>
-        </property>
-    </bean>
-
-    <bean id="clientService" class="study.service.ClientService" factory-method="createInstance"/>
-
-    <bean id="exampleBean" class="study.model.ExampleBean">
-        <constructor-arg name="years" value="7500000"/>
-        <constructor-arg name="ultimateAnswer" value="42"/>
-        <!--   <constructor-arg type="int" value="7500000"/>
-        <constructor-arg type="java.lang.String" value="42"/>
-
-     <constructor-arg index="0" value="7500000"/>
-        <constructor-arg index="1" value="42"/>
-            <constructor-arg name="years" value="7500000"/>
-    <constructor-arg name="ultimateAnswer" value="42"/>
-        -->
-    </bean>
-
-    <!-- a stateful bean deployed as a prototype (non-singleton) -->
-    <!--test1 init7 Lookup method injection-->
-    <bean id="myCommand" class="study.util.Command" scope="prototype">
-        <!-- inject dependencies here as required -->
-    </bean>
-    <!-- commandProcessor uses statefulCommandHelper -->
-    <bean id="commandManager" class="study.util.CommandManager">
-        <lookup-method name="createCommand" bean="myCommand"/>
-    </bean>
-    <!--test1 init7 end-->
-
-    <!--test1 init8 Arbitrary method replacement -->
-    <bean id="myValueCalculator" class="study.util.MyValueCalculator">
-        <!-- arbitrary method replacement -->
-        <replaced-method name="computeValue" replacer="replacementComputeValue">
-            <arg-type>String</arg-type>
-        </replaced-method>
-    </bean>
-    <bean id="replacementComputeValue" class="study.util.ReplacementComputeValue"/>
-    <!--test1 init8 end-->
-
-    <bean id="LifecycleExampleBean" class="study.model.LifecycleExampleBean" init-method="init" destroy-method="cleanup"/>
-
-    <!--test1 init9 Bean definition inheritance -->
-    <bean id="inheritedTestBean" class="study.model.InheritedTestBean">
-        <property name="name" value="parent"/>
-        <property name="age" value="13"/>
-    </bean>
-
-    <bean id="inheritedTestBeanWithoutClass" abstract="true">
-        <property name="name" value="parent"/>
-        <property name="age" value="1"/>
-    </bean>
-
-    <bean id="inheritsWithDifferentClass" class="study.model.DerivedTestBean" parent="inheritedTestBeanWithoutClass" init-method="initialize">
-        <property name="name" value="override"/>
-        <!-- the age property value of 1 will be inherited from parent -->
-    </bean>
-    <!--test1 init9 end-->
-
-    <!--listener -->
-    <bean id="emailService" class="study.listener.EmailService">
-        <property name="blackList">
-            <list>
-                <value>known.spammer@example.org</value>
-                <value>known.hacker@example.org</value>
-                <value>john.doe@example.org</value>
-            </list>
-        </property>
-    </bean>
-
-    <bean id="blackListNotifier" class="study.listener.BlackListNotifier">
-        <property name="notificationAddress" value="blacklist@example.org"/>
-    </bean>
-    <!--listener -->
+    <aop:aspectj-autoproxy proxy-target-class="true" expose-proxy="true" />
+<!--    <bean id="test" class="study.aop.TestBean"/>
+    <bean class="study.aop.AspectJTest" />-->
 
 </beans>

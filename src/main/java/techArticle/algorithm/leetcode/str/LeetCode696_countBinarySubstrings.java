@@ -1,5 +1,8 @@
 package techArticle.algorithm.leetcode.str;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by crist on 2021/4/20
  *https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/
@@ -7,44 +10,36 @@ package techArticle.algorithm.leetcode.str;
  */
 public class LeetCode696_countBinarySubstrings {
 
-    //"catsandog"
-    //["cats","dog","sand","and","cat"]
 
-    public int compareVersion(String version1, String version2) {
-        String [] v1 = version1.split("\\.");
-        String [] v2 = version2.split("\\.");
-        int length = v1.length >= v2.length ? v1.length : v2.length;
-        int result = 0;
-        for(int i=0;i<length; i++){
-            Integer s1,s2;
-            if(i > v1.length -1){
-                s1 = 0;
+    // 00110011
+    public static int countBinarySubstrings(String s) {
+        List<Integer> counts = new ArrayList<>();
+        int n = s.length();
+        int first = s.charAt(0) - '0';
+        int count = 1;
+        for(int i=1;i<n;i++){
+            int cur = s.charAt(i)  - '0';
+            if(cur == first){
+                count++;
             }else{
-                s1 = Integer.valueOf(v1[i]);
+                counts.add(count);
+                count = 1;
             }
-            if(i > v2.length -1){
-                s2 = 0;
-            }else{
-                s2 = Integer.valueOf(v2[i]);
-            }
-            if(s1 > s2){
-                result = 1;
-                break;
-            }
-            if(s1 < s2){
-                result = -1;
-                break;
+            first = cur;
+            if(i == n - 1){
+                counts.add(count);
             }
         }
-        return result;
+        int ans = 0;
+        for (int i = 1; i < counts.size(); ++i) {
+            ans += Math.min(counts.get(i), counts.get(i - 1));
+        }
+        return ans;
+
     }
 
-
-
     public static void main(String[] args) {
-        LeetCode696_countBinarySubstrings test = new LeetCode696_countBinarySubstrings();
-        test.compareVersion("1.0","1.0.0");
-
+        countBinarySubstrings("0101");
     }
 
 

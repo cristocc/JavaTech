@@ -1,11 +1,21 @@
 package study.aop;
 
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
 /**
  * Created by crist on 2022/10/31
  *
  * @author cc
  */
+@Aspect
+@Component
 public class AspectJTest {
+
+    //https://mp.weixin.qq.com/s/w_lJ3SVjK4H88xDizktR0A
+
+    ThreadLocal l = new ThreadLocal();
 
     /**
      * 定义的切点

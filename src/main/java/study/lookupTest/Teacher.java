@@ -5,5 +5,9 @@ package study.lookupTest;
  *
  * @author cc
  */
-public class Teacher {
+public class Teacher extends User {
+
+    public void showMe(){
+        System.out.println("i am teacher");
+    }
 }

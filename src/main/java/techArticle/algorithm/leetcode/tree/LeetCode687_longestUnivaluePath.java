@@ -9,39 +9,24 @@ import java.util.List;
  * @author cc
  */
 public class LeetCode687_longestUnivaluePath {
-
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
-
-        TreeNode() {
-        }
-
-        TreeNode(int val) {
-            this.val = val;
-        }
-
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
-        }
+    int max = 0;
+    public int longestUnivaluePath(TreeNode root) {
+        dfs(root);
+        return max;
     }
 
-    public List<Integer> inorderTraversal(TreeNode root) {
-        List<Integer> res = new ArrayList<>();
-        inorder(root, res);
-        return res;
+    int dfs(TreeNode root) {
+        if (root == null) return 0;
+        int ans = 0, cur = 0, l = dfs(root.left), r = dfs(root.right);
+        if (root.left != null && root.left.val == root.val) {
+            ans = l + 1; cur += l + 1;
+        }
+        if (root.right != null && root.right.val == root.val) {
+            ans = Math.max(ans, r + 1); cur += r + 1;
+        }
+        max = Math.max(max, cur);
+        return ans;
     }
 
-    public void inorder(TreeNode root, List<Integer> res) {
-        if (root == null) {
-            return;
-        }
-        inorder(root.left, res);
-        res.add(root.val);
-        inorder(root.right, res);
-    }
 
 }

@@ -7,21 +7,26 @@ package techArticle.algorithm.leetcode.array;
  */
 public class LeetCode413_numberOfArithmeticSlices {
 
-    public int removeDuplicates(int[] nums) {
-        if (nums.length == 0) {
-            return 0;
+    public int numberOfArithmeticSlices(int[] nums) {
+        int ans = 0;
+        int n = nums.length;
+        if(n == 1){
+            return ans;
         }
-        int slow = 0, fast = 0;
-        while (fast < nums.length) {
-            if (nums[fast] != nums[slow]) {
-                slow++;
-                // 维护 nums[0..slow] 无重复
-                nums[slow] = nums[fast];
+        int d = nums[0] - nums[1];
+        int t = 0;
+        for(int i = 2;i<n;i++){
+            if(nums[i-1] - nums[i] == d){
+                t++;
+            }else{
+                d = nums[i-1] - nums[i];
+                t = 0;
             }
-            fast++;
+            ans += t;
         }
-        // 数组长度为索引 + 1
-        return slow + 1;
+
+        return ans;
+
     }
 
 }

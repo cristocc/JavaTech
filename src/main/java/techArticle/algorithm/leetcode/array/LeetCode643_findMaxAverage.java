@@ -7,25 +7,18 @@ package techArticle.algorithm.leetcode.array;
  */
 public class LeetCode643_findMaxAverage {
 
-    public static boolean searchMatrix(int[][] matrix, int target) {
-        int m = matrix.length, n = matrix[0].length;
-        int low = 0, high = m * n - 1;
-        while (low <= high) {
-            int mid = (high - low) / 2 + low;
-            int x = matrix[mid / n][mid % n];
-            if (x < target) {
-                low = mid + 1;
-            } else if (x > target) {
-                high = mid - 1;
-            } else {
-                return true;
-            }
+    public double findMaxAverage(int[] nums, int k) {
+        int sum = 0;
+        for(int i=0;i<k;i++){
+            sum += nums[i];
         }
-        return false;
+        int maxSum = sum;
+        for(int i = k;i<nums.length;i++){
+            sum = sum - nums[i - k] + nums[k];
+            maxSum = Math.max(sum,maxSum);
+        }
+        return 1.0 * maxSum / 4;
     }
 
-    public static void main(String[] args) {
-        int[][] matrix = {{1,3,5,7},{10,11,16,20},{23,30,34,60}};
-        searchMatrix(matrix,3);
-    }
+
 }

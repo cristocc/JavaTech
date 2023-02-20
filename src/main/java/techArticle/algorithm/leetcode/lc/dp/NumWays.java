@@ -7,8 +7,19 @@ package techArticle.algorithm.leetcode.lc.dp;
  */
 public class NumWays {
 
-    //用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。(若队列中没有元素，deleteHead 操作返回 -1 )
-    public int numWays(int n) {
+/*    一只青蛙一次可以跳上1级台阶，也可以跳上2级台阶。求该青蛙跳上一个 n 级的台阶总共有多少种跳法。
+    答案需要取模 1e9+7（1000000007），如计算初始结果为：1000000008，请返回 1。*/
 
+    public int numWays(int n) {
+        if(n == 0){
+            return 1;
+        }
+        int[] dp = new int[n + 1];
+        dp[1] = 1;
+        dp[2] = 2;
+        for(int i = 3;i<=n;i++){
+            dp[i] = (dp[i-1] + dp[i-2])% 1000000007;
+        }
+        return dp[n];
     }
 }

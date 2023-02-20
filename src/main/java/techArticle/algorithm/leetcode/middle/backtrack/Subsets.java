@@ -1,7 +1,8 @@
 package techArticle.algorithm.leetcode.middle.backtrack;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.netty.handler.timeout.ReadTimeoutException;
+
+import java.util.*;
 
 /**
  * Created by crist on 2022/7/18
@@ -10,32 +11,53 @@ import java.util.List;
  */
 public class Subsets {
 
-    List<List<Integer>> ans = new ArrayList<>();
-    List<Integer> track = new ArrayList<>();
-    boolean[] used ;
+    List<String> ans = new ArrayList<>();
+    Deque<Character> track = new ArrayDeque<>();
+    Map<Character,String> map = new HashMap<>();
 
-    public List<List<Integer>> permute(int[] nums) {
-        used = new boolean[nums.length];
-        dfs(nums);
+    // 23
+    public List<String> letterCombinations(String digits) {
+        map.put('2',"abc");
+        map.put('3',"def");
+        map.put('4',"ghi");
+        map.put('5',"jkl");
+        map.put('6',"mno");
+        map.put('7',"pqrs");
+        map.put('8',"tuv");
+        map.put('9',"wxyz");
+        if("".equals(digits)){
+            return ans;
+        }
+        char[] cs = digits.toCharArray();
+        dfs(cs,0);
         return ans;
+
     }
 
-    public void dfs(int[] nums){
-        if(track.size() == nums.length){
-            ans.add(new ArrayList<>(track));
+    public void dfs(char[] cs,int start){
+        if(cs.length == track.size()){
+            StringBuilder sb = new StringBuilder();
+            for (Character character : track) {
+                sb.append(character);
+            }
+            ans.add(sb.toString());
             return;
         }
-        for(int i = 0;i<nums.length;i++){
-            if(used[i]){
-                continue;
+
+        for (int i = start; i < cs.length; i++) {
+            String val = map.get(cs[i]);
+            int len = val.length();
+            for (int j = 0; j < len; j++) {
+                track.addLast(val.charAt(j));
+                dfs(cs,i +1);
+                track.removeLast();
             }
-            track.add(nums[i]);
-            used[i] = true;
-            dfs(nums);
-            track.remove(track.size() - 1);
-            used[i] = false;
         }
-
-
     }
+
+    public static void main(String[] args) {
+        Subsets test = new Subsets();
+        test.letterCombinations("23");
+    }
+
 }

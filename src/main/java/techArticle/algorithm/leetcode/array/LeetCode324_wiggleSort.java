@@ -11,49 +11,30 @@ import java.util.Map;
  */
 public class LeetCode324_wiggleSort {
 
-    public static int[] twoSum1(int[] nums, int target) {
-        Arrays.sort(nums);
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        int head = 0;
-        int tail = nums.length - 1;
-        while(head <= tail){
-            int a = nums[head];
-            int b = nums[tail];
-            if(a + b> target){
-                tail--;
-            }else if(a +b <target){
-                head++;
-            }else{
-                ret[0] = head;
-                ret[1] = tail;
-                break ;
-            }
-        }
-        return ret;
-    }
 
-    public static int[] twoSum(int[] nums, int target) {
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        Map<Integer, Integer> map = new HashMap<>();
-        for(int i = 0; i< nums.length; i++) {
-            if(map.containsKey(target - nums[i])) {
-                return new int[] {map.get(target-nums[i]),i};
+    public void wiggleSort(int[] nums) {
+        int[] arr = nums.clone();
+        Arrays.sort(arr);
+        int n = nums.length;
+        int[]temp = new int[n];
+        int x = (n + 1) / 2;
+        for (int i = 0, j = x - 1, k = n - 1; i < n; i += 2, j--, k--) {
+            System.out.print("i:"+i+"j:"+j+"k:"+k);
+            temp[i] = arr[j];
+            if (i + 1 < n) {
+                temp[i + 1] = arr[k];
             }
-            map.put(nums[i], i);
+            System.out.println();
         }
-        return ret;
     }
 
     public static void main(String[] args) {
-        int[] nums = {3,2,4};
-        int target = 6;
-        int[] ret = twoSum(nums,target);
-        System.out.println(Arrays.stream(ret));
+        //1,1,1,4,5,6
+        //1,6,1,5,1,4
+        //1,6,1,4,5,1
+        int[] nums = {1,5,1,1,6,4};
+        LeetCode324_wiggleSort test = new LeetCode324_wiggleSort();
+        test.wiggleSort(nums);
+        System.out.println(nums);
     }
 }

@@ -18,12 +18,8 @@ public class PrintABLock {
         Lock lock = new ReentrantLock();
         Condition conditionA = lock.newCondition();
         Condition conditionB = lock.newCondition();
-        Runnable a = ()->{
-            print(lock,"A",conditionA,conditionB);
-        };
-        Runnable b = ()->{
-            print(lock,"b",conditionB,conditionA);
-        };
+        Runnable a = ()->{ print(lock,"A",conditionA,conditionB); };
+        Runnable b = ()->{ print(lock,"b",conditionB,conditionA); };
 
         new Thread(a).start();
         Thread.sleep(1);

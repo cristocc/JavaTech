@@ -1,5 +1,7 @@
 package techArticle.algorithm.leetcode.interview;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+
 /**
  * Created by crist on 2022/7/13
  *
@@ -7,13 +9,19 @@ package techArticle.algorithm.leetcode.interview;
  */
 public class LeetCode_kthToLast {
 
-    public boolean isFlipedString(String s1, String s2) {
-
-        int n1 = s1.length();
-        int n2 = s2.length();
-        if(n1 !=n2){
-            return false;
+    public int kthToLast(ListNode head, int k) {
+        ListNode dummy = head;
+        int len = 0;
+        while (dummy != null){
+            dummy = dummy.next;
+            len++;
         }
-        return (s1 + s1).contains(s2);
+        dummy = head;
+        for(int i=0;i < len - k +1;i++){
+            dummy = dummy.next;
+        }
+
+        return dummy.val;
+
     }
 }

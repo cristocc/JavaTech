@@ -1,9 +1,6 @@
 package techArticle.algorithm.leetcode.str;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by crist on 2021/4/20
@@ -12,31 +9,40 @@ import java.util.Map;
  */
 public class LeetCode819_mostCommonWord {
 
-    public static List<String> subdomainVisits(String[] cpdomains) {
-        Map<String ,Integer> map = new HashMap<>();
-        for(String s:cpdomains){
-            String [] cpinfo = s.split("\\s+");
-            String [] frags = cpinfo[1].split("\\.");
-            int count = Integer.valueOf(cpinfo[0]);
-            String cur = "";
-            for (int i = frags.length - 1; i >= 0; --i) {
-                cur = frags[i] + (i < frags.length - 1 ? "." : "") + cur;
-                map.put(cur, map.getOrDefault(cur, 0) + count);
+    public static String mostCommonWord(String paragraph, String[] banned) {
+        Map<String,Integer> map = new HashMap<>();
+        Set<String> set = new HashSet<>(Arrays.asList(banned));
+        paragraph = paragraph.toLowerCase();
+        String[] paragraphs = paragraph.split("\\s+");
+        for(String s:paragraphs){
+            int len = s.length();
+            char last = s.charAt(len - 1);
+            if(last - 'a' < 0){
+                s = s.substring(0,len - 1);
             }
+            map.put(s,map.getOrDefault(s,0) + 1);
         }
-
-        List<String> ans = new ArrayList<>();
-        for (String key: map.keySet()){
-            ans.add("" + map.get(key) + " " + key);
+        int max = 0;
+        String ans = "";
+        for(String key:map.keySet()){
+            if(!set.contains(key)){
+                int count = map.get(key);
+                if(count >= max){
+                    max = count;
+                    ans = key;
+                }
+            }
         }
         return ans;
     }
 
     public static void main(String[] args) {
-        String[] s = {"9001 discuss.leetcode.com"};
-        subdomainVisits(s);
-    }
 
+        String paragraph = "a, a, a, a, b,b,b,c, c";
+        String [] ban = {"a"};
+        mostCommonWord(paragraph,ban);
+
+    }
 }
 
 

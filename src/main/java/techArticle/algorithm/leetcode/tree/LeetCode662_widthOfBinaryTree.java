@@ -1,5 +1,8 @@
 package techArticle.algorithm.leetcode.tree;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * Created by crist on 2021/4/27
  *
@@ -7,23 +10,23 @@ package techArticle.algorithm.leetcode.tree;
  */
 public class LeetCode662_widthOfBinaryTree {
 
-    private int cnt = 0;
-    private int ans = 0;
-
-    public int kthSmallest(TreeNode root, int k) {
-        f(root, k);
-        return ans;
-    }
-
-    public void f(TreeNode root, int k) {
-        if(root == null)
-            return ;
-        f(root.left, k);
-        cnt++;
-        if (cnt == k) {
-            ans = root.val;
-            return;
+    public int widthOfBinaryTree(TreeNode root) {
+        int ans = 0;
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        while(!queue.isEmpty()){
+            int size = queue.size();
+            ans = Math.max(size,ans);
+            for(int i =0;i<size;i++){
+                TreeNode node = queue.poll();
+                if(node.left != null){
+                    queue.offer(node.left);
+                }
+                if(node.right != null){
+                    queue.offer(node.right);
+                }
+            }
         }
-        f(root.right, k);
+        return ans;
     }
 }

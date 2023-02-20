@@ -34,6 +34,14 @@ public class LeetCode105_buildTree {
         return root;
     }
 
+
+    public static void main(String[] args) {
+        int [] pre = {3,9,20,15,7};
+        int [] in = {9,3,15,20,7};
+        LeetCode105_buildTree bt = new LeetCode105_buildTree();
+        bt.buildTree(pre,in);
+    }
+
     //[rootval | root.left | root.right]
     //[root.left | rootval | root.right]
 

@@ -2,33 +2,30 @@ package techArticle.algorithm.leetcode.array;
 
 /**
  * Created by crist on 2021/3/26
- *
+ * https://leetcode.cn/problems/number-of-lines-to-write-string/
  * @author cc
  */
 public class LeetCode806_numberOfLines {
 
-    public int findPeakElement(int[] nums) {
-        int index = 0;
-        int length = nums.length;
-        for(int i=0;i< length - 1 ;i++){
-            if(nums[i] > nums[i+1]){
-                index = i;
-                break;
+    public int[] numberOfLines(int[] widths, String s) {
+        int row = 1;
+        int width = 0;
+        int[] ans = new int[2];
+        char[] chars = s.toCharArray();
+        for(int i=0;i<chars.length;i++){
+            int c = chars[i] - 'a';
+            int cwidth = widths[c];
+            if(width + cwidth < 100 ){
+                width += cwidth;
+            }else if(width + cwidth == 100 ){
+                width += cwidth;
+            }else if(width + cwidth > 100 ){
+                width = cwidth;
+                row++;
             }
         }
-        if(length == 1){
-            return index;
-        }
-
-        if(nums.length >1 && index ==0 && nums[length -2] < nums[length-1]){
-            return length - 1;
-        }
-        return index;
-    }
-
-    public static void main(String[] args) {
-        int [] nums = {1,2};
-        LeetCode806_numberOfLines test = new LeetCode806_numberOfLines();
-        System.out.println(test.findPeakElement(nums));
+        ans[0] = row;
+        ans[1] = width;
+        return ans;
     }
 }

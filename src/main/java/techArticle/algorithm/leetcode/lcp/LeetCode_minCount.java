@@ -7,13 +7,21 @@ package techArticle.algorithm.leetcode.lcp;
  */
 public class LeetCode_minCount {
 
-    public int game(int[] guess, int[] answer) {
+    public static int minCount(int[] coins) {
         int ans = 0;
-        for(int i=0;i<guess.length;i++){
-            if(guess[i] == answer[i]){
-                ans++;
-            }
+
+        for(int c:coins){
+                if(c % 2 == 0){
+                    ans = ans + c/2;
+                }else {
+                    ans = ans + c/2 + 1;
+                }
         }
         return ans;
+    }
+
+    public static void main(String[] args) {
+        int[] coins = {2,3,10};
+        minCount(coins);
     }
 }

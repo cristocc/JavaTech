@@ -4,6 +4,7 @@ import org.openjdk.jol.info.ClassLayout;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -28,7 +29,7 @@ public class Test{
 
     public static void main(String[] args) {
         init1();
-
+        new AnnotationConfigApplicationContext("com.xiaoxizi.spring");
     }
 
     private static void init2(){

@@ -7,4 +7,12 @@ package techArticle.algorithm.leetcode.linkedlist;
  */
 public class LeetCode237_deleteNode {
 
+
+    public void deleteNode(ListNode node) {
+        node.val=node.next.val;
+        node.next=node.next.next;
+
+    }
+
+
 }

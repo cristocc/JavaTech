@@ -1,7 +1,6 @@
 package techArticle.algorithm.leetcode.tree;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by crist on 2021/4/13
@@ -10,38 +9,58 @@ import java.util.List;
  */
 public class LeetCode107_levelOrderBottom {
 
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
-
-        TreeNode() {
+    public List<List<Integer>> levelOrderBottom(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if(root == null){
+            return res;
         }
+        Queue<TreeNode> queue = new LinkedList();
+        queue.offer(root);
 
-        TreeNode(int val) {
-            this.val = val;
-        }
+        while(!queue.isEmpty()){
+            List<Integer> level = new ArrayList<>();
+            int size = queue.size();
+            for(int i = 0;i<size;i++){
+                TreeNode node = queue.poll();
+                level.add(node.val);
 
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
+                TreeNode left = node.left;
+                TreeNode right = node.right;
+                if(left!= null){
+                    queue.offer(left);
+                }
+                if(right!= null){
+                    queue.offer(right);
+                }
+            }
+            res.add(level);
         }
+         Collections.reverse(res);;
+         return res;
     }
 
-    public List<Integer> inorderTraversal(TreeNode root) {
-        List<Integer> res = new ArrayList<>();
-        inorder(root, res);
+    public List<List<Integer>> levelOrderBottom1(TreeNode root) {
+        List<List<Integer>> res = new LinkedList<>();
+        dfs(root,0,res);
         return res;
     }
 
-    public void inorder(TreeNode root, List<Integer> res) {
-        if (root == null) {
+    public  void dfs(TreeNode root,int deepth,List<List<Integer>> res){
+        if(root == null){
             return;
         }
-        inorder(root.left, res);
-        res.add(root.val);
-        inorder(root.right, res);
+        if(deepth == res.size()){
+            res.add(0,new ArrayList<>());
+        }
+        res.get(res.size() - deepth - 1).add(root.val);
+
+        dfs(root.left,deepth + 1,res);
+        dfs(root.right,deepth + 1,res);
     }
+
+
+
+
+
 
 }

@@ -20,6 +20,10 @@ import javax.annotation.PreDestroy;
 @Component
 public class Student implements DisposableBean, InitializingBean, BeanPostProcessor {
 
+    //Student构造函数
+    //Student customInit
+    //Student afterPropertiesSet
+
     @Autowired
     @Qualifier(value = "user")
     private User user;

@@ -6,4 +6,14 @@ package techArticle.algorithm.leetcode.lcp;
  * @author cc
  */
 public class LeetCode_game {
+
+    public int game(int[] guess, int[] answer) {
+        int ans = 0;
+        for(int i=0;i<guess.length;i++){
+            if(guess[i] == answer[i]){
+                ans++;
+            }
+        }
+        return ans;
+    }
 }

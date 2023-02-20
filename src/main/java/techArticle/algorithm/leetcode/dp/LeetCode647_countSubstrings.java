@@ -9,39 +9,32 @@ import java.util.Arrays;
  */
 public class LeetCode647_countSubstrings {
 
-    // 备忘录，消除重叠子问题
-    int[][] memo;
+    public static int countSubstrings(String s) {
+        int n = s.length();
+        boolean[][] dp = new boolean[n][n];
+        int result = 0;
 
-    public int calculateMinimumHP(int[][] dungeon) {
-        int m = dungeon.length;
-        int n = dungeon[0].length;
-        // 备忘录中都初始化为 -1
-        memo = new int[m][n];
-        for (int[] row : memo) {
-            Arrays.fill(row, -1);
+        for (int j = 0; j < n; j++) { // 注意扫描矩阵的方向，下面会解释
+            for (int i = 0; i <= j; i++) {
+                //System.out.print("i="+i+" j="+j + " ");
+                if (i == j) {   // 单个字符的情况
+                    dp[i][j] = true;
+                    result++;
+                } else if (j - i == 1 && s.charAt(i) == s.charAt(j)) { // 两个字符的情况
+                    dp[i][j] = true;
+                    result++;
+                } else if (j - i > 1 && s.charAt(i) == s.charAt(j) && dp[i + 1][j - 1]) { // 多于两个字符
+                    dp[i][j] = true;
+                    result++;
+                }
+            }
+            //System.out.println();
         }
-        // 我们想计算左上角到右下角所需的最小生命值
-        return dp(dungeon, 0, 0);
+
+        return result;
     }
 
-    int dp(int[][] grid, int i, int j){
-        int m = grid.length;
-        int n = grid[0].length;
-        // base case
-        if (i == m - 1 && j == n - 1) {
-            return grid[i][j] >= 0 ? 1 : -grid[i][j] + 1;
-        }
-        if (i == m || j == n) {
-            return Integer.MAX_VALUE;
-        }
-        // 避免重复计算
-        if (memo[i][j] != -1) {
-            return memo[i][j];
-        }
-        // 状态转移逻辑
-        int res = Math.min(dp(grid, i, j + 1), dp(grid, i + 1, j)) - grid[i][j];
-        // 骑士的生命值至少为 1
-        memo[i][j] = res <= 0 ? 1 : res;
-        return memo[i][j];
+    public static void main(String[] args) {
+        countSubstrings("abc");
     }
 }

@@ -12,50 +12,40 @@ public class LeetCode165_compareVersion {
     //"catsandog"
     //["cats","dog","sand","and","cat"]
 
-    public boolean wordBreak(String s, List<String> wordDict) {
-        Set<String> wordDictSet = new HashSet<>(wordDict);
-        boolean[] dp = new boolean[s.length() + 1];
-        dp[0] = true;
-        for (int i = 1; i <= s.length(); i++) {
-            for (int j = 0; j < i; j++) {
-                if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
-                    dp[i] = true;
-                    break;
-                }
+    public int compareVersion(String version1, String version2) {
+        String [] v1 = version1.split("\\.");
+        String [] v2 = version2.split("\\.");
+        int length = v1.length >= v2.length ? v1.length : v2.length;
+        int result = 0;
+        for(int i=0;i<length; i++){
+            Integer s1,s2;
+            if(i > v1.length -1){
+                s1 = 0;
+            }else{
+                s1 = Integer.valueOf(v1[i]);
+            }
+            if(i > v2.length -1){
+                s2 = 0;
+            }else{
+                s2 = Integer.valueOf(v2[i]);
+            }
+            if(s1 > s2){
+                result = 1;
+                break;
+            }
+            if(s1 < s2){
+                result = -1;
+                break;
             }
         }
-        return dp[s.length()];
+        return result;
     }
 
 
-    public String reverseWords(String s) {
-        int left = 0, right = s.length() - 1;
-        // 去掉字符串开头的空白字符
-
-        Deque<String> d = new ArrayDeque<>();
-        StringBuilder word = new StringBuilder();
-
-        while (left <= right) {
-            char c = s.charAt(left);
-            if ((word.length() != 0) && (c == ' ')) {
-                // 将单词 push 到队列的头部
-                d.offerFirst(word.toString());
-                word.setLength(0);
-            } else if (c != ' ') {
-                word.append(c);
-            }
-            ++left;
-        }
-        d.offerFirst(word.toString());
-
-        return String.join(" ", d);
-    }
 
     public static void main(String[] args) {
-
-        String s = "hello world";
         LeetCode165_compareVersion test = new LeetCode165_compareVersion();
-        test.reverseWords(s);
+        test.compareVersion("1.0","1.0.0");
 
     }
 

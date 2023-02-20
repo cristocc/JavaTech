@@ -9,28 +9,30 @@ import java.util.List;
  * @author cc
  */
 public class LeetCode_generateParenthesis {
-    List<List<Integer>> ans = new ArrayList<>();
+    List<String> ans = new ArrayList<String>();
+    StringBuilder cur = new StringBuilder();
 
-    public List<List<Integer>> combinationSum(int[] candidates, int target) {
-        List<Integer> track = new ArrayList<>();
-        dfs(candidates,target,track,0);
+    public List<String> generateParenthesis(int n) {
+
+        backtrack( 0, 0, n);
         return ans;
     }
 
-
-    private void dfs(int[] candidates, int target,List<Integer> track,int index){
-        if(target<0){
+    public void backtrack( int open, int close, int max) {
+        if (cur.length() == max * 2) {
+            ans.add(cur.toString());
             return;
         }
-        if(target == 0){
-            ans.add(new ArrayList<>(track));
-            return;
+        if (open < max) {
+            cur.append('(');
+            backtrack(open + 1, close, max);
+            cur.deleteCharAt(cur.length() - 1);
         }
-        for(int i=index;i<candidates.length;i++){
-            track.add(candidates[i]);
-            dfs(candidates,target - candidates[i],track,i);
-            track.remove(track.size() - 1);
+        if (close < open) {
+            cur.append(')');
+            backtrack( open, close + 1, max);
+            cur.deleteCharAt(cur.length() - 1);
         }
-
     }
+
 }

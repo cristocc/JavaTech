@@ -1,5 +1,8 @@
 package techArticle.algorithm.leetcode.array;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by crist on 2021/4/19
  *
@@ -7,22 +10,23 @@ package techArticle.algorithm.leetcode.array;
  */
 public class LeetCode442 {
 
-    public static int removeElement(int[] nums, int val) {
+    public static List<Integer> findDuplicates(int[] nums) {
         int n = nums.length;
-        int left = 0;
-        for (int right = 0; right < n; right++) {
-            if (nums[right] != val) {
-                nums[left] = nums[right];
-                left++;
+        List<Integer> ans = new ArrayList<Integer>();
+        for (int i = 0; i < n; ++i) {
+            int x = Math.abs(nums[i]);
+            if (nums[x - 1] > 0) {
+                nums[x - 1] = -nums[x - 1];
+            } else {
+                ans.add(x);
             }
         }
-        return left;
+        return ans;
     }
 
-
     public static void main(String[] args) {
-        int[] nums = {4,2,3,4};
-        removeElement(nums,3);
+        int[] nums = {4,3,2,7,8,2,3,1};
+        findDuplicates(nums);
 
     }
 }

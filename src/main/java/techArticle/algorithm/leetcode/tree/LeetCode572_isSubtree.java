@@ -1,27 +1,40 @@
 package techArticle.algorithm.leetcode.tree;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by crist on 2021/4/27
  *
  * @author cc
  */
 public class LeetCode572_isSubtree {
-    int ans = 0;
 
-    public int findTilt(TreeNode root) {
-        dfs(root);
-        return ans;
-    }
+    public String[] findRestaurant(String[] list1, String[] list2) {
+        int ans = Integer.MAX_VALUE;
+        List<String> list = new ArrayList<>();
 
-    public int dfs(TreeNode root){
-        if(null == root){
-            return 0;
+        for(int i=0;i<list1.length;i++){
+            for(int j=0;j<list2.length;j++){
+                if(list2[j].equals(list1[i])){
+                    if(i + j < ans){
+                        ans = i + j;
+                        list.clear();
+                        list.add(list2[j]);
+                    }else if(i + j == ans){
+                        list.add(list2[j]);
+                    }
+                }
+            }
         }
-        int left = dfs(root.left);
-        int right = dfs(root.right);
-        ans += Math.abs(left - right);
-
-        return left + right + root.val;
+        String[] res = new String[list.size()];
+        int index = 0;
+        for(String str:list){
+            res[index] = str;
+            index++;
+        }
+        return res;
     }
 
 }

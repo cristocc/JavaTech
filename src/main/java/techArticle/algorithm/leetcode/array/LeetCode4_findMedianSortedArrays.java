@@ -11,49 +11,19 @@ import java.util.Map;
  */
 public class LeetCode4_findMedianSortedArrays {
 
-    public static int[] twoSum1(int[] nums, int target) {
-        Arrays.sort(nums);
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
+    public int uniquePaths(int m, int n) {
+        int[][] dp = new int[m][n];
+        for(int i = 0;i<m;i++){
+            dp[i][0] = 1;
         }
-        int head = 0;
-        int tail = nums.length - 1;
-        while(head <= tail){
-            int a = nums[head];
-            int b = nums[tail];
-            if(a + b> target){
-                tail--;
-            }else if(a +b <target){
-                head++;
-            }else{
-                ret[0] = head;
-                ret[1] = tail;
-                break ;
+        for(int j=0;j<n;j++){
+            dp[0][j] = 1;
+        }
+        for(int i = 1;i<m;i++){
+            for(int j=1;j<n;j++){
+                dp[i][j] = dp[i-1][j] + dp[i][j-1];
             }
         }
-        return ret;
-    }
-
-    public static int[] twoSum(int[] nums, int target) {
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        Map<Integer, Integer> map = new HashMap<>();
-        for(int i = 0; i< nums.length; i++) {
-            if(map.containsKey(target - nums[i])) {
-                return new int[] {map.get(target-nums[i]),i};
-            }
-            map.put(nums[i], i);
-        }
-        return ret;
-    }
-
-    public static void main(String[] args) {
-        int[] nums = {3,2,4};
-        int target = 6;
-        int[] ret = twoSum(nums,target);
-        System.out.println(Arrays.stream(ret));
+        return dp[m-1][n-1];
     }
 }

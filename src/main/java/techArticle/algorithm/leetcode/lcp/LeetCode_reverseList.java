@@ -1,5 +1,7 @@
 package techArticle.algorithm.leetcode.lcp;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+
 import java.util.Arrays;
 
 /**
@@ -9,24 +11,28 @@ import java.util.Arrays;
  */
 public class LeetCode_reverseList {
 
+    // 1->2
 
-    public int breakfastNumber(int[] staple, int[] drinks, int x) {
-        int ans = 0;
-        Arrays.sort(staple);
-        Arrays.sort(drinks);
-
-        for(int i = 0;i<staple.length;i++){
-            if(staple[i] > x){
-                break;
-            }
-            for(int j=0;j<drinks.length;j++){
-                if(staple[i] + drinks[j] <= x){
-                    ans++;
-                }else {
-                    break;
-                }
-            }
+    public ListNode reverseList(ListNode head) {
+        if(head == null || head.next == null){
+            return head;
         }
-        return ans ;
+        ListNode last = reverseList(head.next);
+        head.next = head;
+        head.next.next = null;
+        return last;
+    }
+
+
+    public ListNode reverseList1(ListNode head) {
+        ListNode prev = null;
+        ListNode curr = head;
+        while (curr != null){
+            ListNode next = curr.next;
+            curr.next = prev;
+            prev = curr;
+            curr = next;
+        }
+        return prev;
     }
 }

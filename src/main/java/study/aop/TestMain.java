@@ -12,7 +12,7 @@ public class TestMain {
 
     public static void main(String[] args) {
         ApplicationContext context = new ClassPathXmlApplicationContext("springtest.xml");
-        TestBean bean = (TestBean)context.getBean("test");
+        TestBean bean = (TestBean)context.getBean("testBean");
         bean.test();
     }
 }

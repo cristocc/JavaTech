@@ -1,5 +1,7 @@
 package techArticle.algorithm.leetcode.middle.sort;
 
+import java.util.Arrays;
+
 /**
  * Created by crist on 2022/7/19
  *
@@ -7,23 +9,33 @@ package techArticle.algorithm.leetcode.middle.sort;
  */
 public class SearchRange {
 
-    public int findPeakElement(int[] nums) {
-        int ans = 0;
-        for(int i = 0;i<nums.length-1;i++){
-            if(nums[i] < nums[i+1]){
-                ans = i + 1;
-            }else if(nums[i+1] < nums[i]){
-                ans= i;
-                break;
+    public int[] searchRange(int[] nums, int target) {
+        int[] ans = new int[2];
+        Arrays.fill(ans,-1);
+        int low = 0;
+        int high = nums.length - 1;
+        while (low <= high){
+            int mid = low + (high - low)/2;
+            if(nums[mid] == target){
+                int i = mid;
+                while (i >= 0 && nums[i] == target){
+                    i--;
+                }
+                ans[0] = i;
+                i = mid;
+                while (i<nums.length && nums[i] == target){
+                    i++;
+                }
+                ans[1] = i-1;
+                return ans;
+
+            }else if(nums[mid] > target){
+                high = mid - 1;
+            }else {
+                low = mid + 1;
             }
         }
         return ans;
-    }
-
-    public static void main(String[] args) {
-        SearchRange test = new SearchRange();
-        int[] nums = {1,2,3};
-        test.findPeakElement(nums);
     }
 
 }

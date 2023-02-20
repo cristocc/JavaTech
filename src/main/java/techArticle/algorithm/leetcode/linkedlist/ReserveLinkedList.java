@@ -1,5 +1,11 @@
 package techArticle.algorithm.leetcode.linkedlist;
 
+import javax.xml.stream.FactoryConfigurationError;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Created by crist on 2022/1/4
  *
@@ -37,6 +43,14 @@ public class ReserveLinkedList {
             cur = next;
         }
         return pre;
+    }
+
+    public static void main(String[] args) {
+        ListNode n = new ListNode(1);
+        n.next = new ListNode(2);
+
+        ReserveLinkedList r = new ReserveLinkedList();
+        r.reserved(n);
     }
 
 }

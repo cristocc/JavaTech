@@ -1,5 +1,9 @@
 package techArticle.algorithm.leetcode.interview;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+
+import java.util.HashSet;
+
 /**
  * Created by crist on 2022/7/13
  *
@@ -7,13 +11,26 @@ package techArticle.algorithm.leetcode.interview;
  */
 public class LeetCode_removeDuplicateNodes {
 
-    public boolean isFlipedString(String s1, String s2) {
+    public static ListNode removeDuplicateNodes(ListNode head) {
+        ListNode dummy = new ListNode(-1);
+        ListNode ans = dummy;
+        HashSet<Integer> set = new HashSet<>();
+        while (head != null){
+            int val = head.val;
+            if(!set.contains(val)){
+                set.add(val);
+                dummy.next = new ListNode(val);
+                dummy = dummy.next;
+            }
+            head = head.next;
 
-        int n1 = s1.length();
-        int n2 = s2.length();
-        if(n1 !=n2){
-            return false;
         }
-        return (s1 + s1).contains(s2);
+        return ans.next;
+    }
+
+    public static void main(String[] args) {
+        int[] arr = {1,2,3,3,2,1};
+        ListNode node = ListNode.arrToListNode(arr);
+        removeDuplicateNodes(node);
     }
 }

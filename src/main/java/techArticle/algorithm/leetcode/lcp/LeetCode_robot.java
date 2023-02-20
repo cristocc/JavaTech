@@ -7,21 +7,46 @@ package techArticle.algorithm.leetcode.lcp;
  */
 public class LeetCode_robot {
 
-    public static int minCount(int[] coins) {
-        int ans = 0;
+    public boolean robot(String command, int[][] obstacles, int x, int y) {
+        int _x = 0;
+        int _y = 0;
+        char[] commands = command.toCharArray();
 
-        for(int c:coins){
-                if(c % 2 == 0){
-                    ans = ans + c/2;
-                }else {
-                    ans = ans + c/2 + 1;
+        while (true){
+            for(int i=0;i<commands.length;i++){
+                if(commands[i] == 'U'){
+                    _y ++;
+                } else if(commands[i] == 'R'){
+                    _x ++;
                 }
+                if(obstacles(obstacles,_x,_y)){
+                    return false;
+                }
+                if(x == _x && y == _y){
+                    return true;
+                }
+            }
         }
-        return ans;
+    }
+
+    public boolean obstacles(int[][] obstacles, int x, int y){
+        if(null == obstacles){
+            return false;
+        }
+        for(int[] o:obstacles){
+            if(o[0] == x && o[1] ==y ){
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {
-        int[] coins = {2,3,10};
-        minCount(coins);
+        String command = "URR";
+        int x = 3;
+        int y = 2;
+        LeetCode_robot test = new LeetCode_robot();
+        test.robot(command,null,x,y);
     }
+
 }

@@ -14,31 +14,28 @@ import java.util.Queue;
  */
 public class LeetCode_exchange {
 
-    // 1->2
-
-    public List<List<Integer>> levelOrder(TreeNode root) {
-        List<List<Integer>> ans = new ArrayList<>();
-        if(null == root){
-            return ans;
-        }
-        Queue<TreeNode> queue = new LinkedList<>();
-        queue.offer(root);
-        //ans.add(new ArrayList<>(root.val));
-        while (!queue.isEmpty()){
-            int size = queue.size();
-            List<Integer> list = new ArrayList<>();
-            for(int i = 0;i<size;i++){
-                TreeNode node = queue.poll();
-                list.add(node.val);
-                if(node.left != null){
-                    queue.offer(node.left);
-                }
-                if(node.right != null){
-                    queue.offer(node.right);
-                }
+    public static int[] twoSum(int[] nums, int target) {
+        int[] ans = new int[2];
+        int left = 0;
+        int right = nums.length - 1;
+        while (left < right){
+            int val = nums[left] + nums[right];
+            if(val == target){
+                ans[0] = nums[left];
+                ans[1] = nums[right];
+                break;
+            }else if(val > target){
+                right -- ;
+            }else {
+                left ++;
             }
-            ans.add(list);
         }
         return ans;
+    }
+
+    public static void main(String[] args) {
+        int[] nums = {2,7,11,15};
+        twoSum(nums,9);
+
     }
 }

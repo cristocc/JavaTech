@@ -7,18 +7,28 @@ package techArticle.algorithm.leetcode.lc.dp;
  */
 public class MaxSubArray {
 
-    //用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。(若队列中没有元素，deleteHead 操作返回 -1 )
+/*    输入: nums = [-2,1,-3,4,-1,2,1,-5,4]
+    输出: 6
+    解释: 连续子数组 [4,-1,2,1] 的和最大，为 6。*/
 
-    public int fib(int n) {
-        if(n == 0){
-            return 0;
-        }
-        int[] dp = new int[n + 1];
-        dp[1] = 1;
-        for(int i = 2;i<=n;i++){
-            dp[i] = (dp[i-1] + dp[i-2])% 1000000007;
-        }
-        return dp[n];
 
+    public int maxSubArray(int[] nums) {
+        int ans = Integer.MIN_VALUE;
+        int len = nums.length;
+        int[] dp = new int[len];
+        dp[0] = nums[0];
+        for(int i = 1;i<len;i++){
+            dp[i] = Math.max(dp[i-1] + nums[i],nums[i]);
+        }
+        for(int i = 0;i<len;i++){
+            ans = Math.max(ans,dp[i]);
+        }
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        MaxSubArray test = new MaxSubArray();
+        int [] nums = {-2,1,-3,4,-1,2,1,-5,4};
+        test.maxSubArray(nums);
     }
 }

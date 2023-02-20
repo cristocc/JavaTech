@@ -11,49 +11,26 @@ import java.util.Map;
  */
 public class LeetCode2161_pivotArray {
 
-    public static int[] twoSum1(int[] nums, int target) {
-        Arrays.sort(nums);
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        int head = 0;
-        int tail = nums.length - 1;
-        while(head <= tail){
-            int a = nums[head];
-            int b = nums[tail];
-            if(a + b> target){
-                tail--;
-            }else if(a +b <target){
-                head++;
-            }else{
-                ret[0] = head;
-                ret[1] = tail;
-                break ;
+    public int[] pivotArray(int[] nums, int pivot) {
+        int len = nums.length;
+        int[] ans = new int[len];
+        int k = 0;
+        for(int i = 0;i<len;i++){
+            if(nums[i] < pivot){
+                ans[k++] = nums[i];
             }
         }
-        return ret;
-    }
-
-    public static int[] twoSum(int[] nums, int target) {
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        Map<Integer, Integer> map = new HashMap<>();
-        for(int i = 0; i< nums.length; i++) {
-            if(map.containsKey(target - nums[i])) {
-                return new int[] {map.get(target-nums[i]),i};
+        for(int i = 0;i<len;i++){
+            if(nums[i] == pivot){
+                ans[k++] = nums[i];
             }
-            map.put(nums[i], i);
         }
-        return ret;
-    }
+        for(int i = 0;i<len;i++){
+            if(nums[i] > pivot){
+                ans[k++] = nums[i];
+            }
+        }
+        return ans;
 
-    public static void main(String[] args) {
-        int[] nums = {3,2,4};
-        int target = 6;
-        int[] ret = twoSum(nums,target);
-        System.out.println(Arrays.stream(ret));
     }
 }

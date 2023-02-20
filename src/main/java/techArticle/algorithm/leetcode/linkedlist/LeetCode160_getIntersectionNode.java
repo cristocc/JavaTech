@@ -11,7 +11,7 @@ import java.util.Set;
 public class LeetCode160_getIntersectionNode {
 
     public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
-        Set<ListNode> visited = new HashSet<ListNode>();
+        Set<ListNode> visited = new HashSet<>();
         ListNode temp = headA;
         while (temp != null) {
             visited.add(temp);

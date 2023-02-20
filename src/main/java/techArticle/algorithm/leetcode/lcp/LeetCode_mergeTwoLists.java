@@ -1,5 +1,7 @@
 package techArticle.algorithm.leetcode.lcp;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+
 /**
  * Created by crist on 2022/7/13
  *
@@ -8,18 +10,25 @@ package techArticle.algorithm.leetcode.lcp;
 public class LeetCode_mergeTwoLists {
 
 
-    public int calculate(String s) {
-        int x = 1;
-        int y = 0;
-        for(int i=0;i<s.length();i++){
-            char c = s.charAt(i);
-            if('A' == c){
-                x = 2 * x + y;
-            }else{
-                y = 2 * y + x;
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode(-1);
+        ListNode temp = dummy;
+        while (l1 != null && l2 != null){
+            if(l1.val >= l2.val){
+                temp.next = l2;
+                l2 = l2.next;
+            }else {
+                temp.next = l1;
+                l1 = l1.next;
             }
+            temp = temp.next;
         }
-        return x + y;
-
+        if (l1 != null){
+            temp.next = l1;
+        }
+        if (l2 != null){
+            temp.next = l2;
+        }
+        return dummy.next;
     }
 }

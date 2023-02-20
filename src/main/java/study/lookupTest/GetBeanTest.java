@@ -5,5 +5,11 @@ package study.lookupTest;
  *
  * @author cc
  */
-public class GetBeanTest {
+public abstract class GetBeanTest {
+
+    public abstract User getBean();
+
+    public void showMe(){
+        getBean().showMe();
+    }
 }

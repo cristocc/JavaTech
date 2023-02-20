@@ -7,21 +7,27 @@ package techArticle.algorithm.leetcode.array;
  */
 public class LeetCode338_countBits {
 
-    public int removeDuplicates(int[] nums) {
-        if (nums.length == 0) {
-            return 0;
-        }
-        int slow = 0, fast = 0;
-        while (fast < nums.length) {
-            if (nums[fast] != nums[slow]) {
-                slow++;
-                // 维护 nums[0..slow] 无重复
-                nums[slow] = nums[fast];
+    public static int[] countBits(int n) {
+        int [] ans = new int[n+1];
+        for(int i=1;i<=n;i++){
+            int bit1 = 0;
+            for(int j=31;j>=0;j--){
+                if((i & (1<<j))==1){
+                    bit1++;
+                }
             }
-            fast++;
+            ans[i] = bit1;
         }
-        // 数组长度为索引 + 1
-        return slow + 1;
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        int n = 5;
+        //countBits(2);
+        for(int j=31;j>=0;j--){
+            System.out.print((n & (1<<j) ) == 0?"0":"1");
+
+        }
     }
 
 }

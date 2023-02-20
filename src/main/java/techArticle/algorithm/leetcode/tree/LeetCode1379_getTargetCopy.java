@@ -1,7 +1,9 @@
 package techArticle.algorithm.leetcode.tree;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * Created by crist on 2021/4/27
@@ -10,30 +12,29 @@ import java.util.List;
  */
 public class LeetCode1379_getTargetCopy {
 
-    public String[] findRestaurant(String[] list1, String[] list2) {
-        int ans = Integer.MAX_VALUE;
-        List<String> list = new ArrayList<>();
-
-        for(int i=0;i<list1.length;i++){
-            for(int j=0;j<list2.length;j++){
-                if(list2[j].equals(list1[i])){
-                    if(i + j < ans){
-                        ans = i + j;
-                        list.clear();
-                        list.add(list2[j]);
-                    }else if(i + j == ans){
-                        list.add(list2[j]);
-                    }
-                }
+    public final TreeNode getTargetCopy(final TreeNode original, final TreeNode cloned, final TreeNode target) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        Queue<TreeNode> clonedQueue = new LinkedList<>();
+        queue.offer(original);
+        clonedQueue.offer(cloned);
+        TreeNode node1;
+        TreeNode node2;
+        while (!queue.isEmpty()){
+            node1 = queue.poll();
+            node2 = clonedQueue.poll();
+            if (target == node1){
+                return node2;
+            }
+            if (node1.left != null){
+                queue.offer(node1.left);
+                clonedQueue.offer(node2.left);
+            }
+            if (node1.right != null){
+                queue.offer(node1.right);
+                clonedQueue.offer(node2.right);
             }
         }
-        String[] res = new String[list.size()];
-        int index = 0;
-        for(String str:list){
-            res[index] = str;
-            index++;
-        }
-        return res;
-    }
+        return null;
 
+    }
 }

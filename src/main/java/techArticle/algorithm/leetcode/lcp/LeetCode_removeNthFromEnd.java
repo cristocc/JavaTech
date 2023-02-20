@@ -9,20 +9,32 @@ import techArticle.algorithm.leetcode.linkedlist.ListNode;
  */
 public class LeetCode_removeNthFromEnd {
 
+    int len = 0;
 
-    public int kthToLast(ListNode head, int k) {
-        ListNode dummy = head;
-        int len = 0;
-        while (dummy != null){
-            dummy = dummy.next;
-            len++;
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        getLength(head);
+        ListNode dummy = new ListNode(-1);
+        dummy.next = head;
+        ListNode cur = dummy;
+        for (int i = 1; i < len - n + 1; ++i) {
+            cur = cur.next;
         }
-        dummy = head;
-        for(int i=0;i < len - k +1;i++){
-            dummy = dummy.next;
+        cur.next = cur.next.next;
+        return dummy.next;
+    }
+
+    public void getLength(ListNode head) {
+        while (head != null) {
+            ++len;
+            head = head.next;
         }
+    }
 
-        return dummy.val;
 
+    public static void main(String[] args) {
+        int [] a = {1,2};
+        ListNode node = ListNode.arrToListNode(a);
+        LeetCode_removeNthFromEnd test = new LeetCode_removeNthFromEnd();
+        test.removeNthFromEnd(node,2);
     }
 }

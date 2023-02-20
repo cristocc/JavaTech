@@ -1,5 +1,10 @@
 package techArticle.algorithm.leetcode.tree;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 /**
  * Created by crist on 2021/4/27
  *
@@ -7,35 +12,37 @@ package techArticle.algorithm.leetcode.tree;
  */
 public class LeetCode637_averageOfLevels {
 
-    // 定义：将以 root 为根的树拉平为链表
-    void flatten(TreeNode root) {
-        // base case
-        if (root == null) return;
+    public static List<Double> averageOfLevels(TreeNode root) {
+        List<Double> ans = new ArrayList<>();
 
-        flatten(root.left);
-        flatten(root.right);
-
-        /**** 后序遍历位置 ****/
-        // 1、左右子树已经被拉平成一条链表
-        TreeNode left = root.left;
-        TreeNode right = root.right;
-
-        // 2、将左子树作为右子树
-        root.left = null;
-        root.right = left;
-
-        // 3、将原先的右子树接到当前右子树的末端
-        TreeNode p = root;
-        while (p.right != null) {
-            p = p.right;
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        while (!queue.isEmpty()){
+            int size = queue.size();
+            double val = 0;
+            for(int i = 0;i<size;i++){
+                TreeNode node = queue.poll();
+                val += node.val;
+                if(node.left != null){
+                    queue.offer(node.left);
+                }
+                if(node.right != null){
+                    queue.offer(node.right);
+                }
+            }
+            val /= size;
+            ans.add(val);
         }
-        p.right = right;
+        return ans;
     }
-/*                1
-            /       \
-            2       5
-           / \       \
-          3  4         6*/
 
+    public static void main(String[] args) {
+        TreeNode node = new TreeNode(3);
+        node.left = new TreeNode(9);
+        node.right = new TreeNode(20);
+        node.right.left = new TreeNode(15);
+        node.right.right = new TreeNode(7);
+        averageOfLevels(node);
+    }
 
 }

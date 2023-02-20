@@ -1,7 +1,9 @@
 package techArticle.algorithm.leetcode.tree;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * Created by crist on 2021/4/13
@@ -10,38 +12,70 @@ import java.util.List;
  */
 public class LeetCode623_addOneRow {
 
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
-
-        TreeNode() {
+    public TreeNode addOneRow(TreeNode root, int val, int depth) {
+        if (depth == 1) {
+            TreeNode n = new TreeNode(val);
+            n.left = root;
+            return n;
         }
 
-        TreeNode(int val) {
-            this.val = val;
-        }
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        int d = 1;
 
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
+        while (d < depth - 1){
+            int size = queue.size();
+            for(int i=0;i<size;i++){
+                TreeNode node = queue.poll();
+                if(node.left != null){
+                    queue.offer(node.left);
+                }
+                if( node.right != null){
+                    queue.offer(node.right);
+                }
+            }
+            d++;
         }
+        while (!queue.isEmpty()){
+            TreeNode node = queue.remove();
+            TreeNode temp = node.left;
+            node.left = new TreeNode(val);
+            node.left.left = temp;
+            temp = node.right;
+            node.right = new TreeNode(val);
+            node.right.right = temp;
+        }
+        return root;
     }
 
-    public List<Integer> inorderTraversal(TreeNode root) {
-        List<Integer> res = new ArrayList<>();
-        inorder(root, res);
-        return res;
+
+    public TreeNode addOneRow1(TreeNode t, int v, int d) {
+        if(d == 1){
+            TreeNode n = new TreeNode(v);
+            n.left = t;
+            return n;
+        }
+        dfs(t,v,d,1);
+        return t;
     }
 
-    public void inorder(TreeNode root, List<Integer> res) {
-        if (root == null) {
+    private void dfs(TreeNode node, int v, int d,int depth){
+        if(node == null){
             return;
         }
-        inorder(root.left, res);
-        res.add(root.val);
-        inorder(root.right, res);
+        if(depth == d-1){
+            TreeNode t = node.left;
+            node.left = new TreeNode(v);
+            node.left.left = t;
+            t = node.right;
+            node.right = new TreeNode(v);
+            node.right.right = t;
+        }else {
+            dfs(node.left,v,d,depth+1);
+            dfs(node.right,v,d,depth+1);
+        }
+
     }
+
 
 }

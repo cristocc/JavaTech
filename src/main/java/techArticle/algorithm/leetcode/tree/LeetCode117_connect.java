@@ -1,7 +1,9 @@
 package techArticle.algorithm.leetcode.tree;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * Created by crist on 2021/4/27
@@ -10,39 +12,53 @@ import java.util.List;
  */
 public class LeetCode117_connect {
 
-    List<List<Integer>> res ;
-    int targetSum;
-    List<Integer> temp ;
-
-    public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
-        res = new ArrayList<>();
-        temp = new ArrayList<>();
-        this.targetSum = targetSum;
-        dfs(root,0);
-        return res;
-    }
-
-    public void dfs(TreeNode root, int sum){
-        if(root == null){
-            return;
+    public Node connect(Node root) {
+        if (root == null){
+            return null;
         }
-        int val = root.val;
-        temp.add(root.val);
-        if(root.left == null && root.right == null){
-           if(targetSum == sum + val){
-               res.add(new ArrayList<>(temp));
-           }
+        Queue<Node> queue = new LinkedList<>();
+        queue.offer(root);
+        while (!queue.isEmpty()){
+            Node pre = null;
+            int size = queue.size();
+            for(int i = 0;i<size;i++){
+                Node node = queue.poll();
+                if(pre != null){
+                    pre.next = node;
+                }
+                pre = node;
+                if(node.left != null){
+                    queue.add(node.left);
+                }
+                if(node.right != null){
+                    queue.add(node.right);
+                }
+            }
         }
-        dfs(root.left,sum + val);
-        dfs(root.right,sum + val);
-        temp.remove(temp.size() - 1);
+        return root;
     }
 
-    public static void main(String[] args) {
-        TreeNode node = new TreeNode(1);
-        node.left = new TreeNode(2);
-        node.right = new TreeNode(3);
-        LeetCode117_connect test = new LeetCode117_connect();
-        test.pathSum(node,3);
+
+// Definition for a Node.
+class Node {
+    public int val;
+    public Node left;
+    public Node right;
+    public Node next;
+
+    public Node() {}
+
+    public Node(int _val) {
+        val = _val;
     }
+
+    public Node(int _val, Node _left, Node _right, Node _next) {
+        val = _val;
+        left = _left;
+        right = _right;
+        next = _next;
+    }
+};
+
+
 }

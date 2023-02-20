@@ -11,9 +11,9 @@
         http://www.springframework.org/schema/lang/spring-lang.xsd">
 
 
- <context:component-scan base-package="study"/>
-
-
-    <bean id="lifecycleExampleBean" class="study.model.LifecycleExampleBean" init-method="init" destroy-method="cleanup"/>
-
+    <bean id="getBeanTest" class="study.lookupTest.GetBeanTest">
+        <lookup-method name="getBean" bean="student"/>
+    </bean>
+    <bean id="teacher" class="study.lookupTest.Teacher"/>
+    <bean id="student" class="study.lookupTest.Student"/>
 </beans>

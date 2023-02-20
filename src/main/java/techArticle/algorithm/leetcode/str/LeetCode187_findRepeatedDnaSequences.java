@@ -9,56 +9,39 @@ import java.util.*;
  */
 public class LeetCode187_findRepeatedDnaSequences {
 
-    //"catsandog"
-    //["cats","dog","sand","and","cat"]
 
-    public boolean wordBreak(String s, List<String> wordDict) {
-        Set<String> wordDictSet = new HashSet<>(wordDict);
-        boolean[] dp = new boolean[s.length() + 1];
-        dp[0] = true;
-        for (int i = 1; i <= s.length(); i++) {
-            for (int j = 0; j < i; j++) {
-                if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
-                    dp[i] = true;
-                    break;
-                }
+
+    public List<String> findRepeatedDnaSequences(String s) {
+        Map<String,Integer> map = new HashMap<>();
+        int length = s.length();
+        int size = 10;
+        for(int i=0;i<length;i++){
+            int end = i + size;
+            if(end <= length){
+               String temp = s.substring(i,end);
+               if(map.containsKey(temp)){
+                   map.put(temp,map.get(temp) + 1);
+               }else{
+                   map.put(temp,1);
+               }
             }
         }
-        return dp[s.length()];
+        List<String> result = new ArrayList<>();
+        for (String key : map.keySet()) {
+            if(map.get(key) > 1){
+                result.add(key);
+            }
+        }
+        return result;
     }
 
 
-    public String reverseWords(String s) {
-        int left = 0, right = s.length() - 1;
-        // 去掉字符串开头的空白字符
-
-        Deque<String> d = new ArrayDeque<>();
-        StringBuilder word = new StringBuilder();
-
-        while (left <= right) {
-            char c = s.charAt(left);
-            if ((word.length() != 0) && (c == ' ')) {
-                // 将单词 push 到队列的头部
-                d.offerFirst(word.toString());
-                word.setLength(0);
-            } else if (c != ' ') {
-                word.append(c);
-            }
-            ++left;
-        }
-        d.offerFirst(word.toString());
-
-        return String.join(" ", d);
-    }
 
     public static void main(String[] args) {
-
-        String s = "hello world";
         LeetCode187_findRepeatedDnaSequences test = new LeetCode187_findRepeatedDnaSequences();
-        test.reverseWords(s);
-
+        String a = "AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT";
+        test.findRepeatedDnaSequences(a);
     }
-
 
 }
 

@@ -1,5 +1,6 @@
 https://github.com/Snailclimb/JavaGuide/blob/main/docs/java/basis/proxy.md
 
+
 public interface SmsService {
     String send(String message);
 }
@@ -10,3 +11,100 @@ public class SmsServiceImpl implements SmsService {
         return message;
     }
 }
+
+静态代理
+public class SmsProxy implements SmsService {
+    private final SmsService smsService;
+    public SmsProxy(SmsService smsService) {
+        this.smsService = smsService;
+    }
+
+    @Override
+    public String send(String message) {
+        //调用方法之前，我们可以添加自己的操作
+        System.out.println("before method send()");
+        smsService.send(message);
+        //调用方法之后，我们同样可以添加自己的操作
+        System.out.println("after method send()");
+        return null;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        SmsService smsService = new SmsServiceImpl();
+        SmsProxy smsProxy = new SmsProxy(smsService);
+        smsProxy.send("java");
+    }
+}
+
+动态代理
+public class DebugInvocationHandler implements InvocationHandler {
+    /**
+     * 代理类中的真实对象
+     */
+    private final Object target;
+
+    public DebugInvocationHandler(Object target) {
+        this.target = target;
+    }
+
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws InvocationTargetException, IllegalAccessException {
+        //调用方法之前，我们可以添加自己的操作
+        System.out.println("before method " + method.getName());
+        Object result = method.invoke(target, args);
+        //调用方法之后，我们同样可以添加自己的操作
+        System.out.println("after method " + method.getName());
+        return result;
+    }
+}
+
+public class JdkProxyFactory {
+    public static Object getProxy(Object target) {
+        return Proxy.newProxyInstance(
+                target.getClass().getClassLoader(), // 目标类的类加载
+                target.getClass().getInterfaces(),  // 代理需要实现的接口，可指定多个
+                new DebugInvocationHandler(target)   // 代理对象对应的自定义 InvocationHandler
+        );
+    }
+}
+
+SmsService smsService = (SmsService) JdkProxyFactory.getProxy(new SmsServiceImpl());
+smsService.send("java");
+
+CGLIB 动态代理机制
+
+public class DebugMethodInterceptor implements MethodInterceptor {
+    @Override
+    public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        //调用方法之前，我们可以添加自己的操作
+        System.out.println("before method " + method.getName());
+        Object object = methodProxy.invokeSuper(o, args);
+        //调用方法之后，我们同样可以添加自己的操作
+        System.out.println("after method " + method.getName());
+        return object;
+    }
+}
+
+public class CglibProxyFactory {
+    public static Object getProxy(Class<?> clazz) {
+        // 创建动态代理增强类
+        Enhancer enhancer = new Enhancer();
+        // 设置类加载器
+        enhancer.setClassLoader(clazz.getClassLoader());
+        // 设置被代理类
+        enhancer.setSuperclass(clazz);
+        // 设置方法拦截器
+        enhancer.setCallback(new DebugMethodInterceptor());
+        // 创建代理类
+        return enhancer.create();
+    }
+}
+AliSmsService aliSmsService = (AliSmsService) CglibProxyFactory.getProxy(AliSmsService.class);
+aliSmsService.send("java");
+
+JDK 动态代理和 CGLIB 动态代理对比
+1.JDK 动态代理只能代理实现了接口的类或者直接代理接口，而 CGLIB 可以代理未实现任何接口的类。
+另外， CGLIB 动态代理是通过生成一个被代理类的子类来拦截被代理类的方法调用，因此不能代理声明为 final 类型的类和方法。
+2.就二者的效率来说，大部分情况都是 JDK 动态代理更优秀，随着 JDK 版本的升级，这个优势更加明显。

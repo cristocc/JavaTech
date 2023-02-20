@@ -11,7 +11,23 @@ import java.util.Map;
  */
 public class LeetCode646_findLongestChain {
 
-    public int findLongestChain(int[][] pairs) {
+    public static int findLongestChain(int[][] pairs) {
+        Arrays.sort(pairs,(a,b)-> a[1]- b[1]);
+        int ans = 0;
+        int cur = Integer.MIN_VALUE;
+        for(int[] pair:pairs){
+            if(cur < pair[0]){
+                cur = pair[1];
+                ans++;
+            }
+        }
 
+        return ans;
+
+    }
+
+    public static void main(String[] args) {
+        int [][] nums = {{1,2},{2,3},{3,4},{1,3}};
+        findLongestChain(nums);
     }
 }

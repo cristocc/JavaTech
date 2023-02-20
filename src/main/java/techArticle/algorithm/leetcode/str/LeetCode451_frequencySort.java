@@ -9,53 +9,35 @@ import java.util.*;
  */
 public class LeetCode451_frequencySort {
 
-    //"catsandog"
-    //["cats","dog","sand","and","cat"]
+    public static String frequencySort(String s) {
+        Map<Character,Integer> map = new HashMap<>();
+        for(int i=0;i<s.length();i++){
+            map.put(s.charAt(i),map.getOrDefault(s.charAt(i),0) + 1);
+        }
+        List<Character> list = new ArrayList<>(map.keySet());
+        Collections.sort(list, new Comparator<Character>() {
+            @Override
+            public int compare(Character o1, Character o2) {
+                return map.get(o2)-map.get(o1);
+            }
+        });
 
-    public boolean wordBreak(String s, List<String> wordDict) {
-        Set<String> wordDictSet = new HashSet<>(wordDict);
-        boolean[] dp = new boolean[s.length() + 1];
-        dp[0] = true;
-        for (int i = 1; i <= s.length(); i++) {
-            for (int j = 0; j < i; j++) {
-                if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
-                    dp[i] = true;
-                    break;
-                }
+        StringBuffer sb = new StringBuffer();
+        int size = list.size();
+        for (int i = 0; i < size; i++) {
+            char c = list.get(i);
+            int frequency = map.get(c);
+            for (int j = 0; j < frequency; j++) {
+                sb.append(c);
             }
         }
-        return dp[s.length()];
-    }
+        return sb.toString();
 
-
-    public String reverseWords(String s) {
-        int left = 0, right = s.length() - 1;
-        // 去掉字符串开头的空白字符
-
-        Deque<String> d = new ArrayDeque<>();
-        StringBuilder word = new StringBuilder();
-
-        while (left <= right) {
-            char c = s.charAt(left);
-            if ((word.length() != 0) && (c == ' ')) {
-                // 将单词 push 到队列的头部
-                d.offerFirst(word.toString());
-                word.setLength(0);
-            } else if (c != ' ') {
-                word.append(c);
-            }
-            ++left;
-        }
-        d.offerFirst(word.toString());
-
-        return String.join(" ", d);
     }
 
     public static void main(String[] args) {
-
-        String s = "hello world";
-        LeetCode451_frequencySort test = new LeetCode451_frequencySort();
-        test.reverseWords(s);
+        String s = "tree";
+        frequencySort(s);
 
     }
 

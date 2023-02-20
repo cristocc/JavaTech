@@ -1,5 +1,9 @@
 package techArticle.algorithm.leetcode.lcp;
 
+import techArticle.algorithm.leetcode.linkedlist.ListNode;
+
+import java.util.HashSet;
+
 /**
  * Created by crist on 2022/7/13
  *
@@ -8,18 +12,19 @@ package techArticle.algorithm.leetcode.lcp;
 public class LeetCode_getIntersectionNode {
 
 
-    public int calculate(String s) {
-        int x = 1;
-        int y = 0;
-        for(int i=0;i<s.length();i++){
-            char c = s.charAt(i);
-            if('A' == c){
-                x = 2 * x + y;
-            }else{
-                y = 2 * y + x;
-            }
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        HashSet<ListNode> set = new HashSet<>();
+        while (headA != null){
+            set.add(headA);
+            headA = headA.next;
         }
-        return x + y;
+        while (headB != null){
+            if(set.contains(headB)){
+                return headB;
+            }
+            headB = headB.next;
 
+        }
+        return null;
     }
 }

@@ -7,39 +7,29 @@ package techArticle.algorithm.leetcode.dp;
  */
 public class LeetCode63_uniquePathsWithObstacles {
 
-    int jump(int[] nums) {
-        int n = nums.length;
-        int end = 0, farthest = 0;
-        int jumps = 0;
-        for (int i = 0; i < n - 1; i++) {
-            farthest = Math.max(nums[i] + i, farthest);
-            if (end == i) {
-                jumps++;
-                end = farthest;
-            }
-        }
-        return jumps;
-    }
-
-    public static void main(String[] args) {
-        int[] nums = {2,3,1,1,4};
-        LeetCode63_uniquePathsWithObstacles test = new LeetCode63_uniquePathsWithObstacles();
-        test.jump(nums);
-
-    }
-
-
-    public int uniquePaths(int m, int n) {
+    public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+        int m = obstacleGrid.length;
+        int n = obstacleGrid[0].length;
         int[][] dp = new int[m][n];
-        for(int i = 0;i<m;i++){
+        for (int i = 0; i < m; i++) {
+            if (obstacleGrid[i][0] == 1){
+                break;
+            }
             dp[i][0] = 1;
         }
-        for(int j=0;j<n;j++){
-            dp[0][j] = 1;
+        //初始化第一行，只要碰到1，后面都无法到达
+        for (int i = 0; i < n; i++) {
+            if (obstacleGrid[0][i] == 1){
+                break;
+            }
+            dp[0][i] = 1;
         }
-        for(int i = 1;i<m;i++){
-            for(int j=1;j<n;j++){
-                dp[i][j] = dp[i-1][j] + dp[i][j-1];
+
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (obstacleGrid[i][j] == 0) {
+                    dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+                }
             }
         }
         return dp[m-1][n-1];

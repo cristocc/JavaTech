@@ -13,6 +13,7 @@
 
   <context:component-scan base-package="study"/>
 
+
 <!--    <bean id="user" class="com.demo.model.User" init-method="init" destroy-method="destroy" autowire="byType">
         <property name="name" value="张三"/>
         <property name="age" value="18"/>
@@ -104,9 +105,7 @@
         <property name="age" value="1"/>
     </bean>
 
-    <bean id="inheritsWithDifferentClass"
-          class="study.model.DerivedTestBean"
-          parent="inheritedTestBeanWithoutClass" init-method="initialize">
+    <bean id="inheritsWithDifferentClass" class="study.model.DerivedTestBean" parent="inheritedTestBeanWithoutClass" init-method="initialize">
         <property name="name" value="override"/>
         <!-- the age property value of 1 will be inherited from parent -->
     </bean>

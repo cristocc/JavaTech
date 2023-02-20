@@ -10,26 +10,27 @@ import java.util.List;
  * @author cc
  */
 public class LeetCode_combine {
-    List<List<Integer>> res = new LinkedList<>();
+    List<List<Integer>> res = new ArrayList<>();
+    List<Integer> temp = new ArrayList<>();
+    int k;
+    int max;
 
-    List<List<Integer>> permute(int[] nums) {
-        List<Integer> track = new ArrayList<>();
-        dfs(track,nums);
+    public List<List<Integer>> combine(int n, int k) {
+        this.k = k;
+        this.max = n;
+        dfs(1);
         return res;
     }
 
-    void dfs(List<Integer> track,int[] nums){
-        if(track.size() == nums.length){
-            res.add(new ArrayList<>(track));
+    private void dfs(int n){
+        if(temp.size() == k){
+            res.add(new ArrayList<>(temp));
             return;
         }
-
-        for(int i=0;i<nums.length;i++){
-            if(!track.contains(nums[i])){
-                track.add(nums[i]);
-                dfs(track,nums);
-                track.remove(track.size()-1);
-            }
+        for(int i = n;i<=max;i++){
+            temp.add(i);
+            dfs(i+1);
+            temp.remove(temp.size()-1);
         }
 
     }

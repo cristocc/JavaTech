@@ -9,21 +9,43 @@ import java.util.Arrays;
  */
 public class LeetCode583_minDistance {
 
-/*    输入：word1 = "horse", word2 = "ros"
-    输出：3
-    解释：
-    horse -> rorse (将 'h' 替换为 'r')
-    rorse -> rose (删除 'r')
-    rose -> ros (删除 'e')*/
+/*    输入: word1 = "sea", word2 = "eat"
+    输出: 2
+    解释: 第一步将 "sea" 变为 "ea" ，第二步将 "eat "变为 "ea"*/
+
 
    int [][] memo ;
 
     public int minDistance(String word1, String word2) {
-
+        int m = word1.length(), n = word2.length();
+        // 复用前文计算 lcs 长度的函数
+        int lcs = longestCommonSubsequence(word1, word2);
+        return m - lcs + n - lcs;
     }
 
-    int min(int a,int b,int c){
-        return Math.min(a,Math.min(b,c));
+    public int longestCommonSubsequence(String text1, String text2) {
+        int m = text1.length();
+        int n = text2.length();
+        memo = new int[m][n];
+        for(int [] row:memo ){
+            Arrays.fill(row,-1);
+        }
+        return dp(text1,0,text2,0);
+    }
+
+    int dp(String s1, int i, String s2, int j){
+        if(i == s1.length() || j == s2.length()){
+            return 0;
+        }
+        if(memo[i][j] != -1){
+            return memo[i][j];
+        }
+        if(s1.charAt(i) == s2.charAt(j)){
+            memo[i][j] = dp(s1,i+1,s2,j+1) + 1;
+        }else{
+            memo[i][j] = Math.max(dp(s1,i+1,s2,j),dp(s1,i,s2,j+1));
+        }
+        return memo[i][j];
     }
 
 

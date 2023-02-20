@@ -10,12 +10,8 @@ public class PrintAB {
     private static int times = 0;
 
     public static void main(String[] args)throws Exception {
-        Runnable a = () -> {
-            print("a");
-        };
-        Runnable b = () -> {
-            print("b");
-        };
+        Runnable a = () -> { print("a"); };
+        Runnable b = () -> { print("b"); };
         new Thread(a).start();
         new Thread(b).start();
     }
@@ -27,9 +23,9 @@ public class PrintAB {
                     monitor.notifyAll();
                     System.out.println(data);
                     times++;
-                    System.out.println(data +":before wait");
+                    //System.out.println(data +":before wait");
                     monitor.wait();
-                    System.out.println(data +":after wait");
+                    //System.out.println(data +":after wait");
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -37,4 +33,4 @@ public class PrintAB {
         }
     }
 
-    }
+}

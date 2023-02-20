@@ -8,15 +8,15 @@ import java.util.Comparator;
  * https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/
  * @author cc
  */
-public class LeetCode435_eraseOverlapIntervals {
+public class LeetCode452_findMinArrowShots {
 
-    public int eraseOverlapIntervals(int[][] intvs) {
+    public int findMinArrowShots(int[][] intvs) {
         if (intvs.length == 0) return 0;
         // 按 end 升序排序
-        Arrays.sort(intvs, new Comparator<int[]>() {
-            public int compare(int[] a, int[] b) {
-                return a[1] - b[1];
-            }
+        Arrays.sort(intvs, (o1,o2)->{
+            if(o1[1]>o2[1]) return 1;
+            if(o1[1]<o2[1]) return -1;
+            return 0;
         });
         // 至少有一个区间不相交
         int count = 1;
@@ -24,13 +24,13 @@ public class LeetCode435_eraseOverlapIntervals {
         int x_end = intvs[0][1];
         for (int[] interval : intvs) {
             int start = interval[0];
-            if (start >= x_end) {
+            if (start > x_end) {
                 // 找到下一个选择的区间了
                 count++;
                 x_end = interval[1];
             }
         }
-        int n = intvs.length;
-        return n-count;
+
+        return count;
     }
 }

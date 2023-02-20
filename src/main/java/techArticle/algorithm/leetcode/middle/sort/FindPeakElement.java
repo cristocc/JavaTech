@@ -9,16 +9,23 @@ import java.util.Arrays;
  */
 public class FindPeakElement {
 
-    public int findKthLargest(int[] nums, int k) {
-        Arrays.sort(nums);
-        return nums[nums.length - k];//在查找
-
+    public int findPeakElement(int[] nums) {
+        int ans = 0;
+        for(int i = 0;i<nums.length-1;i++){
+            if(nums[i] < nums[i+1]){
+                ans = i + 1;
+            }else if(nums[i+1] < nums[i]){
+                ans= i;
+                break;
+            }
+        }
+        return ans;
     }
 
-    private void swap(int[] nums, int i, int j) {
-        int tmp = nums[i];
-        nums[i] = nums[j];
-        nums[j] = tmp;
+    public static void main(String[] args) {
+        FindPeakElement test = new FindPeakElement();
+        int[] nums = {1,2,3};
+        test.findPeakElement(nums);
     }
 
 }

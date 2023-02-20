@@ -10,27 +10,42 @@ import java.util.List;
  */
 public class LeetCode589_preorder {
 
-    public static class TreeNode {
-        int val;
-        TreeNode left;
-        TreeNode right;
+    class Node {
+        public int val;
+        public List<Node> children;
+        public Node() {}
 
-        TreeNode() {
+        public Node(int _val) {
+            val = _val;
         }
 
-        TreeNode(int val) {
-            this.val = val;
+        public Node(int _val, List<Node> _children) {
+            val = _val;
+            children = _children;
         }
+    };
 
-        TreeNode(int val, TreeNode left, TreeNode right) {
-            this.val = val;
-            this.left = left;
-            this.right = right;
-        }
-    }
+    List<Integer> ans = new ArrayList<>();
 
     public List<Integer> preorder(Node root) {
+        if(null == root){
+            return ans;
+        }
 
+        helper( root);
+        return ans;
     }
+
+    public void helper(Node root) {
+        if (root == null) {
+            return;
+        }
+        ans.add(root.val);
+        List<Node> node = root.children;
+        for(int i=0;i<node.size();i++){
+            helper(node.get(i));
+        }
+    }
+
 
 }

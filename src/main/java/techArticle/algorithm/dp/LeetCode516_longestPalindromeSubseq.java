@@ -9,20 +9,34 @@ import java.util.Arrays;
  */
 public class LeetCode516_longestPalindromeSubseq {
 
-/*    输入: s1 = "sea", s2 = "eat"
-    输出: 231
-    解释: 在 "sea" 中删除 "s" 并将 "s" 的值(115)加入总和。
-    在 "eat" 中删除 "t" 并将 116 加入总和。
-    结束时，两个字符串相等，115 + 116 = 231 就是符合条件的最小和。*/
+/*    输入：s = "bbbab"
+    输出：4
+    解释：一个可能的最长回文子序列为 "bbbb" 。*/
 
    int [][] memo ;
 
     public int longestPalindromeSubseq(String s) {
-
+        int m = s.length();
+        memo = new int[m][m];
+        for(int[] row :memo){
+            Arrays.fill(row,-1);
+        }
+        return dp(s,0,m-1);
     }
 
-    int dp(String s1, int i, String s2, int j){
-
+    int dp(String s, int i, int j){
+        int n = s.length();
+        if (i < 0 || i >= n || j < 0 || j >= n) {
+            return 0;
+        }
+        if(memo[i][j] != -1){
+            return memo[i][j];
+        }
+        if(s.charAt(i) == s.charAt(j)){
+            memo[i][j] = dp(s,i+1,j-1) + 1;
+        }else{
+            memo[i][j] = Math.min(dp(s,i+1,j),dp(s,i,j-1));
+        }
         return memo[i][j];
     }
 }

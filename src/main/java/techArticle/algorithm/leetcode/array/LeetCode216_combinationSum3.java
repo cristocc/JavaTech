@@ -1,8 +1,6 @@
 package techArticle.algorithm.leetcode.array;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by crist on 2021/3/26
@@ -11,49 +9,33 @@ import java.util.Map;
  */
 public class LeetCode216_combinationSum3 {
 
-    public static int[] twoSum1(int[] nums, int target) {
-        Arrays.sort(nums);
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
-        }
-        int head = 0;
-        int tail = nums.length - 1;
-        while(head <= tail){
-            int a = nums[head];
-            int b = nums[tail];
-            if(a + b> target){
-                tail--;
-            }else if(a +b <target){
-                head++;
-            }else{
-                ret[0] = head;
-                ret[1] = tail;
-                break ;
-            }
-        }
-        return ret;
+    int[] nums ={0,1,2,3,4,5,6,7,8,9};
+    boolean[] used ={true,false,false,false,false,false,false,false,false,false};
+    List<List<Integer>> result = new ArrayList<>();
+    LinkedList<Integer> track = new LinkedList<>();
+
+    public List<List<Integer>> combinationSum3(int k, int n) {
+        backtrack(k,n,1);
+        return result;
     }
 
-    public static int[] twoSum(int[] nums, int target) {
-        int[] ret = {0,0};
-        if(nums.length <= 1){
-            return ret;
+    public void backtrack(int k, int n,int i){
+        if(k <0 || n <0){
+            return;
         }
-        Map<Integer, Integer> map = new HashMap<>();
-        for(int i = 0; i< nums.length; i++) {
-            if(map.containsKey(target - nums[i])) {
-                return new int[] {map.get(target-nums[i]),i};
+        if(k == 0 && n == 0){
+            result.add(new ArrayList<>(track));
+            return;
+        }
+        for(;i<nums.length;i++){
+            if(used[i]){
+                continue;
             }
-            map.put(nums[i], i);
+            track.add(nums[i]);
+            used[i] = true;
+            backtrack(k - 1 ,n-nums[i],i+1);
+            track.removeLast();
+            used[i] = false;
         }
-        return ret;
-    }
-
-    public static void main(String[] args) {
-        int[] nums = {3,2,4};
-        int target = 6;
-        int[] ret = twoSum(nums,target);
-        System.out.println(Arrays.stream(ret));
     }
 }

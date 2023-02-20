@@ -1,34 +1,43 @@
 package techArticle.algorithm.leetcode.tree;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * Created by crist on 2021/4/13
  *https://leetcode-cn.com/problems/delete-node-in-a-bst/
  *
  * @author cc
  */
-public class LeetCode450_deleteNode {
-    TreeNode deleteNode(TreeNode root, int key) {
-        if (root == null) return null;
-        if (root.val == key) {
-            // 这两个 if 把情况 1 和 2 都正确处理了
-            if (root.left == null) return root.right;
-            if (root.right == null) return root.left;
-            // 处理情况 3
-            TreeNode minNode = getMin(root.right);
-            root.val = minNode.val;
-            root.right = deleteNode(root.right, minNode.val);
-        } else if (root.val > key) {
-            root.left = deleteNode(root.left, key);
-        } else if (root.val < key) {
-            root.right = deleteNode(root.right, key);
+public class LeetCode671_findSecondMinimumValue {
+
+    HashSet<Integer> set = new HashSet<>();
+
+    public int findSecondMinimumValue(TreeNode root) {
+        if(root.left == null || root.right == null){
+            return -1;
         }
-        return root;
+        dfs(root);
+        int size = set.size();
+        if(size == 1){
+            return -1;
+        }
+        Integer[] ans =new Integer[size];
+        ans= set.toArray(ans);
+        Arrays.sort(ans);
+        return ans[1];
     }
 
-    TreeNode getMin(TreeNode node) {
-        // BST 最左边的就是最小的
-        while (node.left != null) node = node.left;
-        return node;
+    private void dfs(TreeNode node){
+        if(null == node){
+            return;
+        }
+        int val = node.val;
+        set.add(val);
+        dfs(node.left);
+        dfs(node.right);
     }
+
+
 
 }

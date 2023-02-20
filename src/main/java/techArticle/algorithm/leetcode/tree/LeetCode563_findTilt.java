@@ -6,31 +6,22 @@ package techArticle.algorithm.leetcode.tree;
  * @author cc
  */
 public class LeetCode563_findTilt {
+    int ans = 0;
 
-    TreeNode constructMaximumBinaryTree(int[] nums) {
-        return build(nums, 0, nums.length - 1);
+    public int findTilt(TreeNode root) {
+        dfs(root);
+        return ans;
     }
 
-    TreeNode build(int[] nums, int lo, int hi) {
-        // base case
-        if (lo > hi) {
-            return null;
+    public int dfs(TreeNode root){
+        if(null == root){
+            return 0;
         }
-        // 找到数组中的最大值和对应的索引
-        int index = -1, maxVal = Integer.MIN_VALUE;
-        for (int i = lo; i <= hi; i++) {
-            if (maxVal < nums[i]) {
-                index = i;
-                maxVal = nums[i];
-            }
-        }
-        TreeNode root = new TreeNode(maxVal);
-        // 递归调用构造左右子树
-        root.left = build(nums, lo, index - 1);
-        root.right = build(nums, index + 1, hi);
+        int left = dfs(root.left);
+        int right = dfs(root.right);
+        ans += Math.abs(left - right);
 
-        return root;
+        return left + right + root.val;
     }
-
 
 }
