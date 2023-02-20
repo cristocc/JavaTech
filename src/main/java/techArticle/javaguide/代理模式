@@ -1,0 +1,12 @@
+https://github.com/Snailclimb/JavaGuide/blob/main/docs/java/basis/proxy.md
+
+public interface SmsService {
+    String send(String message);
+}
+
+public class SmsServiceImpl implements SmsService {
+    public String send(String message) {
+        System.out.println("send message:" + message);
+        return message;
+    }
+}
