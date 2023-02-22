@@ -1,0 +1,16 @@
+https://github.com/AUTOMATIC1111/stable-diffusion-webui
+
+--lowvram
+--disable-nan-check
+--skip-torch-cuda-test
+--precision full
+--no-half
+
+https://www.bilibili.com/read/cv19019484
+
+(8k, RAW photo, best quality, masterpiece:1.2), (realistic, photo-realistic:1.37),<lora:koreanDollLikeness_v10:1>, omertosa,1lady, (aegyo sal:1),city,
+professional lighting,photon mapping, radiosity, physically-based rendering, blue backlight bokeh, smile,mature, head portrait,sunlight,blone,short jacket,school uniform,hoodie,long hair,floating hair
+
+EasyNegative, paintings, sketches, (worst quality:2),(low quality:2), (normal quality:2),lowres, normal quality, ((monochrome)),((grayscale)),
+skin spots, acnes, skin blemishes, age spot, glans,extra fingers,fewer fingers,strange fingers,bad hand, high heel shoes, fat ass,hole,kid,teen,cute,naked,
+Ripped jeans, hole jeans,  fat thigh,6 fingers, bikini, underwear,nsfw, nude, briefs, knickers, underpants, panties, swim suit,leg open
