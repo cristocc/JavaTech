@@ -30,6 +30,11 @@ public class Controller1 {
         return new User("cc",18);
     }
 
+    @GetMapping("/test5")
+    public void test5(User user){
+        System.out.println("test5"+user);
+    }
+
     public static class User{
         private String name;
         private int age;
@@ -53,6 +58,14 @@ public class Controller1 {
 
         public void setAge(int age) {
             this.age = age;
+        }
+
+        @Override
+        public String toString() {
+            return "User{" +
+                    "name='" + name + '\'' +
+                    ", age=" + age +
+                    '}';
         }
     }
 

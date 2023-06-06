@@ -10,9 +10,11 @@ import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.servlet.mvc.method.annotation.ServletModelAttributeMethodProcessor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,20 +24,22 @@ public class A20 {
         AnnotationConfigServletWebServerApplicationContext context =
                 new AnnotationConfigServletWebServerApplicationContext(WebConfig.class);
 
-        RequestMappingHandlerMapping handlerMapping = context.getBean(RequestMappingHandlerMapping.class);
-
-        Map<RequestMappingInfo, HandlerMethod> handlerMethods = handlerMapping.getHandlerMethods();
+/*        Map<RequestMappingInfo, HandlerMethod> handlerMethods = handlerMapping.getHandlerMethods();
         handlerMethods.forEach((k,v)->{
             System.out.print("k="+k);
             System.out.print("v="+v);
             System.out.println();
-        });
-        MyRequestMappingHandlerAdapter adapter = context.getBean(MyRequestMappingHandlerAdapter.class);
+        });*/
         MockHttpServletRequest request = new MockHttpServletRequest("GET","/test1");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
+        MyRequestMappingHandlerAdapter adapter = context.getBean(MyRequestMappingHandlerAdapter.class);
+        RequestMappingHandlerMapping handlerMapping = context.getBean(RequestMappingHandlerMapping.class);
         HandlerExecutionChain chain = handlerMapping.getHandler(request);
-        System.out.println(chain);
+        adapter.invokeHandlerMethod(request,response,(HandlerMethod)chain.getHandler());
+        //System.out.println(chain);
+
+
 
        // adapter.invokeHandlerMethod(request,response,(HandlerMethod)chain.getHandler());
 /*        System.out.println("----参数解析器-----");
@@ -57,6 +61,18 @@ public class A20 {
             adapter.invokeHandlerMethod(request,response,(HandlerMethod)chain.getHandler());
             byte[] content = response.getContentAsByteArray();
             System.out.println(new String(content,"UTF-8"));
+        }
+
+        {
+/*            request = new MockHttpServletRequest("GET","/test5");
+            request.setParameter("name","cc");
+            request.setParameter("age","10");
+            chain = handlerMapping.getHandler(request);
+            List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
+            resolvers.add(new ServletModelAttributeMethodProcessor(false));
+            resolvers.add(new ServletModelAttributeMethodProcessor(true));
+            adapter.setArgumentResolvers(resolvers);
+            adapter.invokeHandlerMethod(request,response,(HandlerMethod)chain.getHandler());*/
         }
 
     }

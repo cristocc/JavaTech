@@ -34,6 +34,6 @@ public class JdkProxyDemo {
         System.out.println(proxy.getClass());
         System.out.println(proxy.toString());
 
-        //System.in.read();
+        System.in.read();
     }
 }
