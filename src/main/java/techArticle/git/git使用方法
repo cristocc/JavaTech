@@ -20,3 +20,9 @@ https://blog.csdn.net/weixin_41010198/article/details/119698015
 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
 
 git remote set-url origin https://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@github.com/cristocc/JavaTech.git/
+
+git config --global http.proxy http://127.0.0.1:58088
+
+
+github  Failed to connect to github.com port 443 after 21044
+git config --global --unset http.proxy
